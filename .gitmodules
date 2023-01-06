@@ -1,0 +1,4 @@
+[submodule "Source/abseil/abseil-20210324"]
+	path = Source/abseil/abseil-20210324
+	url = git@github.com:abseil/abseil-cpp.git
+	branch = lts_2021_03_24
