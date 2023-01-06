@@ -2,3 +2,6 @@
 	path = Source/abseil/abseil-20210324
 	url = git@github.com:abseil/abseil-cpp.git
 	branch = lts_2021_03_24
+[submodule "Source/re2/re2-20220601"]
+	path = Source/re2/re2-20220601
+	url = git@github.com:google/re2.git
