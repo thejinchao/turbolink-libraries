@@ -1,10 +1,19 @@
 Libraries for TurboLink
 =====
-ThirdParty Libraries for [TurboLink](https://github.com/thejinchao/turbolink), include [abesil](https://github.com/abseil/abseil-cpp), [re2](https://github.com/google/re2), [protobuf](https://github.com/protocolbuffers/protobuf/tree) and [grpc](https://github.com/grpc).
+[Unreal Engine](https://www.unrealengine.com/) compatibile gRPC libraries, include [abesil](https://github.com/abseil/abseil-cpp), [re2](https://github.com/google/re2), [protobuf](https://github.com/protocolbuffers/protobuf/tree) and [gRPC](https://github.com/grpc). This repo is part of [TurboLink](https://github.com/thejinchao/turbolink), an Unreal Engine gRPC plugin.
 
 # How to build these libraries
 
-## Set Environment Variables
+## 1. Prepare
+* [Visual Studio 2019](https://visualstudio.microsoft.com/)
+* [CMake](https://cmake.org/)
+* [Unreal Engine Source Code](https://github.com/epicgames/unrealengine)
+* Unreal Engine [Cross-Compiling toolchain for Linux](https://docs.unrealengine.com/4.27/en-US/SharingAndReleasing/Linux/GettingStarted/)
+* [Ninja](https://ninja-build.org/)
+* [Android Studio](https://developer.android.com/studio/)
+* XCode(for MacOS and iOS)
+
+## 2. Set Environment Variables
 The environment variables required for compilation
 
 ### All Platform
@@ -20,7 +29,8 @@ The environment variables required for compilation
 * `LINUX_MULTIARCH_ROOT` The directory where you installed Unreal Engine [Cross-Compiling toolchain for Linux](https://docs.unrealengine.com/4.27/en-US/SharingAndReleasing/Linux/GettingStarted/).
 * `NINJA_EXE_PATH` The file path of `ninja.exe`, [Ninja](https://ninja-build.org/) is a small build system with a focus on speed.
 
-## Compile Step
+## 3. Compile Step
+After clone this repo, update all submodules, and then follow the steps below to compile these libraries.
 * [abseil](/Source/abseil)
 * [re2](/Source/re2)
 * [protobuf](/Source/protobuf)
