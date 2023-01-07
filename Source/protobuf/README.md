@@ -19,7 +19,7 @@ git apply --whitespace=nowarn ../patch/diff-base-on-3.19.0.diff
 ```
 mkdir %TL_LIBRARIES_PATH%\_build\win64\protobuf & cd %TL_LIBRARIES_PATH%\_build\win64\protobuf
 cmake -G "Visual Studio 16 2019" -A x64 ^
- -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/protobuf ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/protobuf ^
  -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" ^
  -Dprotobuf_BUILD_TESTS=false -Dprotobuf_WITH_ZLIB=false ^
  -Dprotobuf_DEBUG_POSTFIX="" ^
@@ -39,7 +39,7 @@ mkdir %a & pushd %a ^
  -DCMAKE_TOOLCHAIN_FILE="%NDKROOT%\build\cmake\android.toolchain.cmake" ^
  -DCMAKE_MAKE_PROGRAM=%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\ninja.exe ^
  -DANDROID_ABI=%a -Dprotobuf_DEBUG_POSTFIX="" ^
- -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/protobuf ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/protobuf ^
  -DCMAKE_INSTALL_LIBDIR="lib/android/%a/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
  -DCMAKE_INSTALL_CMAKEDIR=lib/android/%a/cmake ^
  -Dprotobuf_BUILD_TESTS=false -Dprotobuf_WITH_ZLIB=false ^
@@ -56,7 +56,7 @@ mkdir %TL_LIBRARIES_PATH%\_build\linux\protobuf & cd %TL_LIBRARIES_PATH%\_build\
 cmake -G "Ninja Multi-Config" -DCMAKE_MAKE_PROGRAM=%NINJA_EXE_PATH% ^
  -DCMAKE_TOOLCHAIN_FILE="%TL_LIBRARIES_PATH%\BuildTools\linux\ue4-linux-cross-compile.cmake" ^
  -DUE_THIRD_PARTY_PATH=%UE_THIRD_PARTY_PATH% -Dprotobuf_DEBUG_POSTFIX="" ^
- -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/protobuf ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/protobuf ^
  -DCMAKE_INSTALL_LIBDIR="lib/linux/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
  -DCMAKE_INSTALL_CMAKEDIR=lib/linux/cmake ^
  -Dprotobuf_BUILD_TESTS=false -Dprotobuf_WITH_ZLIB=false ^
@@ -70,7 +70,7 @@ cmake --build . --target install --config Release
 ```
 mkdir -p $TL_LIBRARIES_PATH/_build/mac/protobuf && cd $TL_LIBRARIES_PATH/_build/mac/protobuf
 cmake -G "Unix Makefiles" \
- -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/../UnrealPlugin/TurboLink/ThirdParty/protobuf \
+ -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/output/protobuf \
  -DCMAKE_INSTALL_LIBDIR=lib/mac -DCMAKE_OSX_DEPLOYMENT_TARGET=10.14 \
  -DCMAKE_INSTALL_CMAKEDIR=lib/mac/cmake -DCMAKE_CXX_STANDARD=14 \
  -Dprotobuf_BUILD_TESTS=false -Dprotobuf_WITH_ZLIB=false \
@@ -83,7 +83,7 @@ cmake --build . --target install --config Release
 ```
 mkdir -p $TL_LIBRARIES_PATH/_build/ios/protobuf && cd $TL_LIBRARIES_PATH/_build/ios/protobuf
 cmake -G "Unix Makefiles" \
- -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/../UnrealPlugin/TurboLink/ThirdParty/protobuf \
+ -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/output/protobuf \
  -DCMAKE_TOOLCHAIN_FILE=$TL_LIBRARIES_PATH/BuildTools/iOS/ios.toolchain.cmake \
  -DCMAKE_INSTALL_LIBDIR=lib/ios -DPLATFORM=OS64 \
  -DCMAKE_INSTALL_CMAKEDIR=lib/ios/cmake -DCMAKE_CXX_STANDARD=17 \
@@ -97,7 +97,7 @@ cmake --build . --target install --config Release
 ```
 mkdir %TL_LIBRARIES_PATH%\_build\ps5\protobuf & cd %TL_LIBRARIES_PATH%\_build\ps5\protobuf
 "%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5CMake.bat" ^
- -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/protobuf ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/protobuf ^
  -DCMAKE_INSTALL_LIBDIR="lib/ps5/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
  -DCMAKE_INSTALL_CMAKEDIR=lib/ps5/cmake -DCMAKE_CXX_STANDARD=14 ^
  -Dprotobuf_BUILD_TESTS=false -Dprotobuf_WITH_ZLIB=false ^
