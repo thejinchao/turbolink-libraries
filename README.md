@@ -18,7 +18,7 @@ The environment variables required for compilation
 * `NINJA_EXE_PATH` The file path of `ninja.exe`, [Ninja](https://ninja-build.org/) is a small build system with a focus on speed.
 
 # How to build these libraries
-* [abseil](/Libraries/Source/abseil/README.md)
-* [re2](/Libraries/Source/re2/README.md)
-* [protobuf](/Libraries/Source/protobuf/README.md)
-* [grpc](/Libraries/Source/grpc/README.md)
+* [abseil](/Source/abseil/README.md)
+* [re2](/Source/re2/README.md)
+* [protobuf](/Source/protobuf/README.md)
+* [grpc](/Source/grpc/README.md)
