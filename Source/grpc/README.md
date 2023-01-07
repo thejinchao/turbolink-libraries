@@ -1,0 +1,193 @@
+# [grpc](https://grpc.io/)
+gRPC is a modern open source high performance Remote Procedure Call (RPC) framework that can run in any environment. It can efficiently connect services in and across data centers with pluggable support for load balancing, tracing, health checking and authentication. It is also applicable in last mile of distributed computing to connect devices, mobile applications and browsers to backend services.
+
+## Version
+1.41
+
+## Submodule
+https://github.com/grpc/grpc/tree/v1.41.0
+
+## Patch
+```
+cd %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.41.0
+git apply --whitespace=nowarn  ../patch/diff-base-on-1.41.0.patch
+```
+
+## Build
+
+### 1. Windows
+```
+mkdir %TL_LIBRARIES_PATH%\_build\win64\grpc & cd %TL_LIBRARIES_PATH%\_build\win64\grpc
+cmake -G "Visual Studio 16 2019" -A x64 ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/grpc ^
+ -DgRPC_INSTALL_LIBDIR="lib/win64/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DgRPC_INSTALL_CMAKEDIR=lib/win64/cmake -DgRPC_USE_CARES=OFF ^
+ -DgRPC_ABSL_PROVIDER=package -Dabsl_DIR="%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/abseil/lib/win64/cmake" ^
+ -DgRPC_RE2_PROVIDER=package -Dre2_DIR="%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/re2/lib/win64/cmake" ^
+ -DgRPC_PROTOBUF_PROVIDER=package -DgRPC_PROTOBUF_PACKAGE_TYPE=CONFIG ^
+ -DProtobuf_DIR="%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/protobuf/lib/win64/cmake" ^
+ -DgRPC_ZLIB_PROVIDER=package ^
+ -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/v1.2.8/include/Win64/VS2015" ^
+ -DZLIB_LIBRARY_RELEASE="%UE_THIRD_PARTY_PATH%/zlib/v1.2.8/lib/Win64/VS2015/Release/zlibstatic.lib" ^
+ -DZLIB_LIBRARY_DEBUG="%UE_THIRD_PARTY_PATH%/zlib/v1.2.8/lib/Win64/VS2015/Debug/zlibstatic.lib" ^
+ -DgRPC_SSL_PROVIDER=package ^
+ -DOPENSSL_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/include/Win64/VS2015" ^
+ -DLIB_EAY_LIBRARY_DEBUG="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Debug/libcrypto.lib" ^
+ -DLIB_EAY_LIBRARY_RELEASE="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Release/libcrypto.lib" ^
+ -DLIB_EAY_DEBUG="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Debug/libcrypto.lib" ^
+ -DLIB_EAY_RELEASE="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Release/libcrypto.lib" ^
+ -DSSL_EAY_DEBUG="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Debug/libssl.lib" ^
+ -DSSL_EAY_LIBRARY_DEBUG="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Debug/libssl.lib" ^
+ -DSSL_EAY_LIBRARY_RELEASE="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Release/libssl.lib" ^
+ -DSSL_EAY_RELEASE="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Release/libssl.lib" ^
+ %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.41.0
+cmake --build . --target INSTALL --config Debug
+cmake --build . --target INSTALL --config Release
+```
+### 2. Android(armv7, arm64, x64)
+```
+mkdir %TL_LIBRARIES_PATH%\_build\android\grpc & cd %TL_LIBRARIES_PATH%\_build\android\grpc
+for /d %i in (armeabi-v7a.ARMv7 arm64-v8a.ARM64 x86_64.x64) do (
+for /f "tokens=1,2 delims=." %a in ("%i") do (
+mkdir %a & pushd %a ^
+ & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" -G "Ninja Multi-Config" ^
+ -DCMAKE_TOOLCHAIN_FILE="%NDKROOT%\build\cmake\android.toolchain.cmake" ^
+ -DCMAKE_MAKE_PROGRAM=%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\ninja.exe ^
+ -DANDROID_ABI=%a ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/grpc ^
+ -DgRPC_INSTALL_LIBDIR="lib/android/%a/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DgRPC_INSTALL_CMAKEDIR=lib/android/%a/cmake ^
+ -DgRPC_ABSL_PROVIDER=package -Dabsl_DIR="%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/abseil/lib/android/%a/cmake" ^
+ -DgRPC_RE2_PROVIDER=package -Dre2_DIR="%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/re2/lib/android/%a/cmake" ^
+ -DgRPC_PROTOBUF_PROVIDER=package -DgRPC_PROTOBUF_PACKAGE_TYPE=CONFIG ^
+ -DProtobuf_DIR="%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/protobuf/lib/android/%a/cmake" ^
+ -DgRPC_USE_CARES=OFF -DgRPC_ZLIB_PROVIDER=package ^
+ -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/zlib-1.2.5/Inc" ^
+ -DgRPC_SSL_PROVIDER=package ^
+ -DOPENSSL_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/include/Android" ^
+ -DOPENSSL_SSL_LIBRARY="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Android/%b/libssl.a" ^
+ -DOPENSSL_CRYPTO_LIBRARY="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Android/%b/libcrypto.a" ^
+ -DgRPC_BUILD_CODEGEN=OFF -DgRPC_BUILD_CSHARP_EXT=OFF ^
+ %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.41.0 ^
+ & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" --build . --target install --config Debug ^
+ & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" --build . --target install --config Release ^
+ & popd
+))
+```
+### 3. Linux
+```
+mkdir %TL_LIBRARIES_PATH%\_build\linux\grpc & cd %TL_LIBRARIES_PATH%\_build\linux\grpc
+cmake -G "Ninja Multi-Config" -DCMAKE_MAKE_PROGRAM=%NINJA_EXE_PATH% ^
+ -DCMAKE_TOOLCHAIN_FILE="%TL_LIBRARIES_PATH%\BuildTools\linux\ue4-linux-cross-compile.cmake" ^
+ -DUE_THIRD_PARTY_PATH=%UE_THIRD_PARTY_PATH% ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/grpc ^
+ -DgRPC_INSTALL_LIBDIR="lib/linux/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DgRPC_INSTALL_CMAKEDIR=lib/linux/cmake ^
+ -DgRPC_ABSL_PROVIDER=package -Dabsl_DIR="%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/abseil/lib/linux/cmake" ^
+ -DgRPC_USE_CARES=OFF ^
+ -DgRPC_RE2_PROVIDER=package -Dre2_DIR="%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/re2/lib/linux/cmake" ^
+ -DgRPC_PROTOBUF_PROVIDER=package -DgRPC_PROTOBUF_PACKAGE_TYPE=CONFIG ^
+ -DProtobuf_DIR="%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/protobuf/lib/linux/cmake" ^
+ -DgRPC_ZLIB_PROVIDER=package ^
+ -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/zlib-1.2.5/Inc" ^
+ -DZLIB_LIBRARY_RELEASE="%UE_THIRD_PARTY_PATH%/zlib/zlib-1.2.5/Lib/Linux/x86_64-unknown-linux-gnu/libz.a" ^
+ -DZLIB_LIBRARY_DEBUG="%UE_THIRD_PARTY_PATH%/zlib/zlib-1.2.5/Lib/Linux/x86_64-unknown-linux-gnu/libz.a" ^
+ -DgRPC_SSL_PROVIDER=package ^
+ -DOPENSSL_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1c/include/Linux/x86_64-unknown-linux-gnu" ^
+ -DOPENSSL_SSL_LIBRARY="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1c/lib/Linux/x86_64-unknown-linux-gnu/libssl.a" ^
+ -DOPENSSL_CRYPTO_LIBRARY="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1c/lib/Linux/x86_64-unknown-linux-gnu/libcrypto.a" ^
+ -DgRPC_BUILD_CODEGEN=OFF -DgRPC_BUILD_CSHARP_EXT=OFF ^
+ -DgRPC_BUILD_GRPC_CPP_PLUGIN=OFF -DgRPC_BUILD_GRPC_CSHARP_PLUGIN=OFF ^
+ -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF ^
+ -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF ^
+ -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF ^
+ %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.41.0
+cmake --build . --target install --config Debug
+cmake --build . --target install --config Release
+```
+### 4. Mac
+```
+mkdir -p $TL_LIBRARIES_PATH/_build/mac/grpc && cd $TL_LIBRARIES_PATH/_build/mac/grpc
+cmake -G "Unix Makefiles" \
+ -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/../UnrealPlugin/TurboLink/ThirdParty/grpc \
+ -DgRPC_INSTALL_LIBDIR=lib/mac -DgRPC_INSTALL_CMAKEDIR=lib/mac/cmake \
+ -DCMAKE_OSX_DEPLOYMENT_TARGET=10.14 -DCMAKE_CXX_STANDARD=14 \
+ -DgRPC_ABSL_PROVIDER=package -Dabsl_DIR="$TL_LIBRARIES_PATH/../UnrealPlugin/TurboLink/ThirdParty/abseil/lib/mac/cmake" \
+ -DgRPC_RE2_PROVIDER=package -Dre2_DIR="$TL_LIBRARIES_PATH/../UnrealPlugin/TurboLink/ThirdParty/re2/lib/mac/cmake" \
+ -DgRPC_PROTOBUF_PROVIDER=package -DgRPC_PROTOBUF_PACKAGE_TYPE=CONFIG \
+ -DProtobuf_DIR="$TL_LIBRARIES_PATH/../UnrealPlugin/TurboLink/ThirdParty/protobuf/lib/mac/cmake" \
+ -DgRPC_USE_CARES=OFF -DgRPC_ZLIB_PROVIDER=package \
+ -DZLIB_INCLUDE_DIR="$UE_THIRD_PARTY_PATH/zlib/v1.2.8/include" \
+ -DZLIB_LIBRARY_RELEASE="$UE_THIRD_PARTY_PATH/zlib/v1.2.8/lib/Mac/libz.a" \
+ -DZLIB_LIBRARY_DEBUG="$UE_THIRD_PARTY_PATH/zlib/v1.2.8/lib/Mac/libz.a" \
+ -DgRPC_SSL_PROVIDER=package \
+ -DOPENSSL_INCLUDE_DIR="$UE_THIRD_PARTY_PATH/OpenSSL/1.1.1k/include/Mac" \
+ -DOPENSSL_SSL_LIBRARY="$UE_THIRD_PARTY_PATH/OpenSSL/1.1.1k/lib/Mac/libssl.a" \
+ -DOPENSSL_CRYPTO_LIBRARY="$UE_THIRD_PARTY_PATH/OpenSSL/1.1.1k/lib/Mac/libcrypto.a" \
+ -DgRPC_BUILD_CODEGEN=OFF -DgRPC_BUILD_CSHARP_EXT=OFF \
+ -DgRPC_BUILD_GRPC_CPP_PLUGIN=OFF -DgRPC_BUILD_GRPC_CSHARP_PLUGIN=OFF \
+ -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
+ -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
+ -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF \
+ $TL_LIBRARIES_PATH/Source/grpc/grpc-1.41.0
+cmake --build . --target install --config Release
+```
+### 5. iOS
+```
+mkdir -p $TL_LIBRARIES_PATH/_build/ios/grpc && cd $TL_LIBRARIES_PATH/_build/ios/grpc
+cmake -G "Unix Makefiles" \
+ -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/../UnrealPlugin/TurboLink/ThirdParty/grpc \
+ -DCMAKE_TOOLCHAIN_FILE=$TL_LIBRARIES_PATH/BuildTools/iOS/ios.toolchain.cmake \
+ -DPLATFORM=OS64  -DCMAKE_CXX_STANDARD=17 \
+ -DgRPC_INSTALL_LIBDIR=lib/ios -DgRPC_INSTALL_CMAKEDIR=lib/ios/cmake \
+ -DgRPC_ABSL_PROVIDER=package -Dabsl_DIR="$TL_LIBRARIES_PATH/../UnrealPlugin/TurboLink/ThirdParty/abseil/lib/ios/cmake" \
+ -DgRPC_USE_CARES=OFF \
+ -DgRPC_RE2_PROVIDER=package -Dre2_DIR="$TL_LIBRARIES_PATH/../UnrealPlugin/TurboLink/ThirdParty/re2/lib/ios/cmake" \
+ -DgRPC_PROTOBUF_PROVIDER=package -DgRPC_PROTOBUF_PACKAGE_TYPE=CONFIG \
+ -DProtobuf_DIR="$TL_LIBRARIES_PATH/../UnrealPlugin/TurboLink/ThirdParty/protobuf/lib/ios/cmake" \
+ -DgRPC_ZLIB_PROVIDER=package \
+ -DZLIB_INCLUDE_DIR="$UE_THIRD_PARTY_PATH/zlib/zlib-1.2.5/Inc" \
+ -DZLIB_LIBRARY_RELEASE="$UE_THIRD_PARTY_PATH/zlib/zlib-1.2.5/lib/IOS/Device/libzlib.a" \
+ -DZLIB_LIBRARY_DEBUG="$UE_THIRD_PARTY_PATH/zlib/zlib-1.2.5/lib/IOS/libzlib.a" \
+ -DgRPC_SSL_PROVIDER=package \
+ -DOPENSSL_INCLUDE_DIR="$UE_THIRD_PARTY_PATH/OpenSSL/1.1.1k/include/IOS" \
+ -DOPENSSL_SSL_LIBRARY="$UE_THIRD_PARTY_PATH/OpenSSL/1.1.1k/lib/IOS/libssl.a" \
+ -DOPENSSL_CRYPTO_LIBRARY="$UE_THIRD_PARTY_PATH/OpenSSL/1.1.1k/lib/IOS/libcrypto.a" \
+ -DgRPC_BUILD_CODEGEN=OFF -DgRPC_BUILD_CSHARP_EXT=OFF \
+ -DgRPC_BUILD_GRPC_CPP_PLUGIN=OFF -DgRPC_BUILD_GRPC_CSHARP_PLUGIN=OFF \
+ -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
+ -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
+ -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF \
+ $TL_LIBRARIES_PATH/Source/grpc/grpc-1.41.0
+cmake --build . --target install --config Release
+```
+### 3. Play Station 5
+```
+mkdir %TL_LIBRARIES_PATH%\_build\ps5\grpc & cd %TL_LIBRARIES_PATH%\_build\ps5\grpc
+"%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5CMake.bat" ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/grpc ^
+ -DCMAKE_CXX_STANDARD=14 ^
+ -DgRPC_INSTALL_LIBDIR="lib/ps5/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DgRPC_INSTALL_CMAKEDIR=lib/ps5/cmake ^
+ -DgRPC_ABSL_PROVIDER=package -Dabsl_DIR="%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/abseil/lib/ps5/cmake" ^
+ -DgRPC_USE_CARES=OFF ^
+ -DgRPC_RE2_PROVIDER=package -Dre2_DIR="%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/re2/lib/ps5/cmake" ^
+ -DgRPC_PROTOBUF_PROVIDER=package -DgRPC_PROTOBUF_PACKAGE_TYPE=CONFIG ^
+ -DProtobuf_DIR="%TL_LIBRARIES_PATH%/../UnrealPlugin/TurboLink/ThirdParty/protobuf/lib/ps5/cmake" ^
+ -DgRPC_ZLIB_PROVIDER=package ^
+ -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/zlib-1.2.5/Inc" ^
+ -DZLIB_LIBRARY_RELEASE="%UE_PS5_THIRD_PARTY_PATH%/zlib/zlib-1.2.5/Lib/libz.a" ^
+ -DZLIB_LIBRARY_DEBUG="%UE_PS5_THIRD_PARTY_PATH%/zlib/zlib-1.2.5/Lib/libz.a" ^
+ -DgRPC_SSL_PROVIDER=package ^
+ -DOPENSSL_INCLUDE_DIR="%UE_PS5_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/include" ^
+ -DOPENSSL_SSL_LIBRARY="%UE_PS5_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/Lib/Release/libssl.a" ^
+ -DOPENSSL_CRYPTO_LIBRARY="%UE_PS5_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/Lib/Release/libcrypto.a" ^
+ -DgRPC_BUILD_CODEGEN=OFF -DgRPC_BUILD_CSHARP_EXT=OFF ^
+ -DgRPC_BUILD_GRPC_CPP_PLUGIN=OFF -DgRPC_BUILD_GRPC_CSHARP_PLUGIN=OFF ^
+ -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF ^
+ -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF ^
+ -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF ^
+ %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.41.0
+cmake --build . --target INSTALL --config Debug
+cmake --build . --target INSTALL --config Release
+```
