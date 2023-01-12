@@ -40,6 +40,7 @@ cmake -G "Visual Studio 16 2019" -A x64 ^
  -DSSL_EAY_LIBRARY_DEBUG="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Debug/libssl.lib" ^
  -DSSL_EAY_LIBRARY_RELEASE="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Release/libssl.lib" ^
  -DSSL_EAY_RELEASE="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Release/libssl.lib" ^
+ -DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL ^
  %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.41.0
 cmake --build . --target INSTALL --config Debug
 cmake --build . --target INSTALL --config Release
