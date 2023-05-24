@@ -1,13 +1,13 @@
 [submodule "Source/abseil/abseil-20210324"]
 	path = Source/abseil/abseil-20210324
-	url = git@github.com:abseil/abseil-cpp.git
+	url = https://github.com/abseil/abseil-cpp.git
 	branch = lts_2021_03_24
 [submodule "Source/re2/re2-20220601"]
 	path = Source/re2/re2-20220601
-	url = git@github.com:google/re2.git
+	url = https://github.com/google/re2.git
 [submodule "Source/protobuf/protobuf-3.19.0"]
 	path = Source/protobuf/protobuf-3.19.0
-	url = git@github.com:protocolbuffers/protobuf.git
+	url = https://github.com/protocolbuffers/protobuf.git
 [submodule "Source/grpc/grpc-1.41.0"]
 	path = Source/grpc/grpc-1.41.0
-	url = git@github.com:grpc/grpc.git
+	url = https://github.com/grpc/grpc.git
