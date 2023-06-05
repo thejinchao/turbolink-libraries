@@ -1,7 +1,3 @@
-[submodule "Source/abseil/abseil-20210324"]
-	path = Source/abseil/abseil-20210324
-	url = https://github.com/abseil/abseil-cpp.git
-	branch = lts_2021_03_24
 [submodule "Source/re2/re2-20220601"]
 	path = Source/re2/re2-20220601
 	url = https://github.com/google/re2.git
@@ -12,3 +8,7 @@
 	path = Source/protobuf/protobuf-4.23.x
 	url = https://github.com/protocolbuffers/protobuf.git
 	branch = 23.x
+[submodule "Source/abseil/abseil-20230125"]
+	path = Source/abseil/abseil-20230125
+	url = https://github.com/abseil/abseil-cpp.git
+	branch = lts_2023_01_25
