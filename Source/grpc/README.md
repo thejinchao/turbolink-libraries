@@ -165,7 +165,7 @@ cmake --build . --target install --config Release
 ### 3. Play Station 5
 ```
 mkdir %TL_LIBRARIES_PATH%\_build\ps5\grpc & cd %TL_LIBRARIES_PATH%\_build\ps5\grpc
-"%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5CMake.bat" ^
+"%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5CMake.bat" -G "Visual Studio 16 2019" ^
  -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/grpc ^
  -DCMAKE_CXX_STANDARD=14 ^
  -DgRPC_INSTALL_LIBDIR="lib/ps5/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
