@@ -1,0 +1,165 @@
+diff --git a/CMake/AbseilHelpers.cmake b/CMake/AbseilHelpers.cmake
+index f452a676..c8dc2c84 100644
+--- a/CMake/AbseilHelpers.cmake
++++ b/CMake/AbseilHelpers.cmake
+@@ -200,21 +200,6 @@ function(absl_cc_library)
+       endif()
+     endforeach()
+     string(REPLACE ";" " " PC_LINKOPTS "${ABSL_CC_LIB_LINKOPTS}")
+-    FILE(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/lib/pkgconfig/absl_${_NAME}.pc" CONTENT "\
+-prefix=${CMAKE_INSTALL_PREFIX}\n\
+-exec_prefix=\${prefix}\n\
+-libdir=${CMAKE_INSTALL_FULL_LIBDIR}\n\
+-includedir=${CMAKE_INSTALL_FULL_INCLUDEDIR}\n\
+-\n\
+-Name: absl_${_NAME}\n\
+-Description: Abseil ${_NAME} library\n\
+-URL: https://abseil.io/\n\
+-Version: ${PC_VERSION}\n\
+-Requires:${PC_DEPS}\n\
+-Libs: -L\${libdir} ${PC_LINKOPTS} $<$<NOT:$<BOOL:${ABSL_CC_LIB_IS_INTERFACE}>>:${LNK_LIB}>\n\
+-Cflags: -I\${includedir}${PC_CFLAGS}\n")
+-    INSTALL(FILES "${CMAKE_BINARY_DIR}/lib/pkgconfig/absl_${_NAME}.pc"
+-            DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+   endif()
+ 
+   if(NOT ABSL_CC_LIB_IS_INTERFACE)
+@@ -256,6 +241,12 @@ Cflags: -I\${includedir}${PC_CFLAGS}\n")
+         ${ABSL_CC_LIB_LINKOPTS}
+         ${ABSL_DEFAULT_LINKOPTS}
+       )
++      if(WIN32 AND ABSL_ENABLE_INSTALL)
++        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/absl_${_NAME}.pdb
++          DESTINATION ${CMAKE_INSTALL_LIBDIR}
++          CONFIGURATIONS Debug
++        )
++      endif()
+     else()
+       message(FATAL_ERROR "Invalid build type: ${_build_type}")
+     endif()
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3a9e521f..41902ddd 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -177,20 +177,21 @@ add_subdirectory(absl)
+ 
+ if(ABSL_ENABLE_INSTALL)
+   
++  set(ABSL_CMAKE_INSTALL_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_CMAKEDIR}")
+ 
+   # install as a subdirectory only
+   install(EXPORT ${PROJECT_NAME}Targets
+     NAMESPACE absl::
+-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
++    DESTINATION ${ABSL_CMAKE_INSTALL_PATH}
+   )
+ 
+   configure_package_config_file(
+     CMake/abslConfig.cmake.in
+     "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+-    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
++    INSTALL_DESTINATION ${ABSL_CMAKE_INSTALL_PATH}
+   )
+   install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
++    DESTINATION ${ABSL_CMAKE_INSTALL_PATH}
+   )
+ 
+   # Abseil only has a version in LTS releases.  This mechanism is accomplished
+@@ -203,7 +204,7 @@ if(ABSL_ENABLE_INSTALL)
+     )
+ 
+     install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+-      DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
++      DESTINATION ${ABSL_CMAKE_INSTALL_PATH}
+     )
+   endif()  # absl_VERSION
+ 
+diff --git a/absl/container/internal/btree.h b/absl/container/internal/btree.h
+index d734676a..e07d9d64 100644
+--- a/absl/container/internal/btree.h
++++ b/absl/container/internal/btree.h
+@@ -1549,7 +1549,7 @@ class btree {
+   }
+ 
+   // Verifies the structure of the btree.
+-  void verify() const;
++  void verify_struct() const;
+ 
+   // Size routines.
+   size_type size() const { return size_; }
+@@ -2568,7 +2568,7 @@ void btree<P>::swap(btree &other) {
+ }
+ 
+ template <typename P>
+-void btree<P>::verify() const {
++void btree<P>::verify_struct() const {
+   assert(root() != nullptr);
+   assert(leftmost() != nullptr);
+   assert(rightmost() != nullptr);
+diff --git a/absl/container/internal/btree_container.h b/absl/container/internal/btree_container.h
+index 2bff11db..275a856b 100644
+--- a/absl/container/internal/btree_container.h
++++ b/absl/container/internal/btree_container.h
+@@ -194,7 +194,7 @@ class btree_container {
+   // Utility routines.
+   ABSL_ATTRIBUTE_REINITIALIZES void clear() { tree_.clear(); }
+   void swap(btree_container &other) { tree_.swap(other.tree_); }
+-  void verify() const { tree_.verify(); }
++  void verify_struct() const { tree_.verify_struct(); }
+ 
+   // Size routines.
+   size_type size() const { return tree_.size(); }
+diff --git a/absl/time/internal/cctz/include/cctz/civil_time_detail.h b/absl/time/internal/cctz/include/cctz/civil_time_detail.h
+index a5b084e6..f7d11532 100644
+--- a/absl/time/internal/cctz/include/cctz/civil_time_detail.h
++++ b/absl/time/internal/cctz/include/cctz/civil_time_detail.h
+@@ -58,7 +58,7 @@ using second_t = std::int_fast8_t;  // [0:59]
+ struct fields {
+   CONSTEXPR_M fields(year_t year, month_t month, day_t day, hour_t hour,
+                      minute_t minute, second_t second)
+-      : y(year), m(month), d(day), hh(hour), mm(minute), ss(second) {}
++      : y(year), m(std::int_least8_t(month)), d(std::int_least8_t(day)), hh(std::int_least8_t(hour)), mm(std::int_least8_t(minute)), ss(std::int_least8_t(second)) {}
+   std::int_least64_t y;
+   std::int_least8_t m;
+   std::int_least8_t d;
+diff --git a/absl/time/internal/cctz/src/time_zone_info.cc b/absl/time/internal/cctz/src/time_zone_info.cc
+index 787426f7..807028ee 100644
+--- a/absl/time/internal/cctz/src/time_zone_info.cc
++++ b/absl/time/internal/cctz/src/time_zone_info.cc
+@@ -461,7 +461,7 @@ bool TimeZoneInfo::Load(ZoneInfoSource* zip) {
+   }
+   bool seen_type_0 = false;
+   for (std::size_t i = 0; i != hdr.timecnt; ++i) {
+-    transitions_[i].type_index = Decode8(bp++);
++    transitions_[i].type_index = (uint_least8_t)Decode8(bp++);
+     if (transitions_[i].type_index >= hdr.typecnt) return false;
+     if (transitions_[i].type_index == 0) seen_type_0 = true;
+   }
+@@ -477,7 +477,7 @@ bool TimeZoneInfo::Load(ZoneInfoSource* zip) {
+       return false;
+     bp += 4;
+     transition_types_[i].is_dst = (Decode8(bp++) != 0);
+-    transition_types_[i].abbr_index = Decode8(bp++);
++    transition_types_[i].abbr_index = (uint_least8_t)Decode8(bp++);
+     if (transition_types_[i].abbr_index >= hdr.charcnt) return false;
+   }
+ 
+@@ -551,7 +551,7 @@ bool TimeZoneInfo::Load(ZoneInfoSource* zip) {
+   if (transitions_.empty() || transitions_.front().unix_time >= 0) {
+     Transition& tr(*transitions_.emplace(transitions_.begin()));
+     tr.unix_time = -(1LL << 59);  // -18267312070-10-26T17:01:52+00:00
+-    tr.type_index = default_transition_type_;
++    tr.type_index = (uint_least8_t)default_transition_type_;
+   }
+ 
+   // Extend the transitions using the future specification.
+@@ -566,7 +566,7 @@ bool TimeZoneInfo::Load(ZoneInfoSource* zip) {
+     const std::uint_fast8_t type_index = last.type_index;
+     Transition& tr(*transitions_.emplace(transitions_.end()));
+     tr.unix_time = 2147483647;  // 2038-01-19T03:14:07+00:00
+-    tr.type_index = type_index;
++    tr.type_index = (uint_least8_t)type_index;
+   }
+ 
+   // Compute the local civil time for each transition and the preceding
