@@ -10,7 +10,7 @@ https://github.com/protocolbuffers/protobuf/tree/23.x
 ## Apply Patch
 ```
 cd %TL_LIBRARIES_PATH%/Source/protobuf/protobuf-4.23.x
-git apply --whitespace=nowarn ../patch/diff-base-on-4.23.diff
+git apply --whitespace=nowarn ../patch/diff-base-on-4.23.patch
 ```
 
 ## Build
