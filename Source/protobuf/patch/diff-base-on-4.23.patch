@@ -1,0 +1,90 @@
+diff --git a/cmake/install.cmake b/cmake/install.cmake
+index e7eb2103b..ed8998b11 100644
+--- a/cmake/install.cmake
++++ b/cmake/install.cmake
+@@ -43,6 +43,11 @@ foreach(_library ${_protobuf_libraries})
+     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT ${_library}
+     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT ${_library}
+     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT ${_library})
++  if(WIN32)
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/${_library}.pdb
++       DESTINATION ${CMAKE_INSTALL_LIBDIR}
++       CONFIGURATIONS Debug)
++  endif()
+ endforeach()
+ 
+ if (protobuf_BUILD_PROTOC_BINARIES)
+diff --git a/src/google/protobuf/generated_message_util.h b/src/google/protobuf/generated_message_util.h
+index 0493bccef..7f4c8fffc 100644
+--- a/src/google/protobuf/generated_message_util.h
++++ b/src/google/protobuf/generated_message_util.h
+@@ -210,7 +210,7 @@ class PROTOBUF_EXPORT CachedSize {
+   constexpr CachedSize() noexcept : atom_(Scalar{}) {}
+   // NOLINTNEXTLINE(google-explicit-constructor)
+   constexpr CachedSize(Scalar desired) noexcept : atom_(desired) {}
+-#if PROTOBUF_BUILTIN_ATOMIC
++#ifdef PROTOBUF_BUILTIN_ATOMIC
+   constexpr CachedSize(const CachedSize& other) = default;
+ 
+   Scalar Get() const noexcept {
+@@ -237,7 +237,7 @@ class PROTOBUF_EXPORT CachedSize {
+ #endif
+ 
+  private:
+-#if PROTOBUF_BUILTIN_ATOMIC
++#ifdef PROTOBUF_BUILTIN_ATOMIC
+   Scalar atom_;
+ #else
+   std::atomic<Scalar> atom_;
+diff --git a/src/google/protobuf/port_def.inc b/src/google/protobuf/port_def.inc
+index 18d7ccfe8..23dfdcb5a 100644
+--- a/src/google/protobuf/port_def.inc
++++ b/src/google/protobuf/port_def.inc
+@@ -1062,7 +1062,7 @@ static_assert(PROTOBUF_ABSL_MIN(20230125, 3),
+ #pragma warning(disable: 4125)
+ #endif
+ 
+-#if PROTOBUF_ENABLE_DEBUG_LOGGING_MAY_LEAK_PII
++#if defined(PROTOBUF_ENABLE_DEBUG_LOGGING_MAY_LEAK_PII) && PROTOBUF_ENABLE_DEBUG_LOGGING_MAY_LEAK_PII
+ #define PROTOBUF_DEBUG true
+ #else
+ #define PROTOBUF_DEBUG false
+diff --git a/src/google/protobuf/repeated_field.h b/src/google/protobuf/repeated_field.h
+index 057565a41..5a87e6d9c 100644
+--- a/src/google/protobuf/repeated_field.h
++++ b/src/google/protobuf/repeated_field.h
+@@ -101,7 +101,7 @@ constexpr int kRepeatedFieldUpperClampLimit =
+ // Swaps two blocks of memory of size kSize:
+ template <size_t kSize>
+ void memswap(char* a, char* b) {
+-#if __SIZEOF_INT128__
++#ifdef __SIZEOF_INT128__
+   using Buffer = __uint128_t;
+ #else
+   using Buffer = uint64_t;
+diff --git a/third_party/utf8_range/CMakeLists.txt b/third_party/utf8_range/CMakeLists.txt
+index 344952d38..c22664af3 100644
+--- a/third_party/utf8_range/CMakeLists.txt
++++ b/third_party/utf8_range/CMakeLists.txt
+@@ -56,7 +56,7 @@ if (utf8_range_ENABLE_INSTALL)
+   include(GNUInstallDirs)
+ 
+   install(EXPORT ${PROJECT_NAME}-targets
+-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
++    DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+     NAMESPACE utf8_range::
+   )
+   install(TARGETS utf8_validity utf8_range EXPORT ${PROJECT_NAME}-targets
+@@ -68,10 +68,10 @@ if (utf8_range_ENABLE_INSTALL)
+   configure_package_config_file(
+     cmake/${PROJECT_NAME}-config.cmake.in
+     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+-    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
++    INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+   )
+   install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
++    DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+   )
+   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/utf8_range.pc.cmake
+                  ${CMAKE_CURRENT_BINARY_DIR}/utf8_range.pc @ONLY)
