@@ -1,0 +1,284 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 8b289a0aab..18d81752bc 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -49,6 +49,7 @@ option(gRPC_BUILD_TESTS "Build tests" OFF)
+ option(gRPC_BUILD_CODEGEN "Build codegen" ON)
+ option(gRPC_BUILD_CSHARP_EXT "Build C# extensions" ON)
+ option(gRPC_BACKWARDS_COMPATIBILITY_MODE "Build libraries that are binary compatible across a larger number of OS and libc versions" OFF)
++option(gRPC_USE_CARES "Use c-ares as DNS requests library" ON)
+ 
+ set(gRPC_INSTALL_default ON)
+ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+@@ -318,7 +319,6 @@ include(cmake/ccache.cmake)
+ include(cmake/abseil-cpp.cmake)
+ include(cmake/address_sorting.cmake)
+ include(cmake/benchmark.cmake)
+-include(cmake/cares.cmake)
+ include(cmake/protobuf.cmake)
+ include(cmake/re2.cmake)
+ include(cmake/ssl.cmake)
+@@ -327,6 +327,13 @@ include(cmake/xxhash.cmake)
+ include(cmake/zlib.cmake)
+ include(cmake/download_archive.cmake)
+ 
++if (gRPC_USE_CARES)
++ add_definitions("-DGRPC_ARES=1")
++ include(cmake/cares.cmake)
++else()
++ add_definitions("-DGRPC_ARES=0")
++endif()
++
+ if(_gRPC_PLATFORM_LINUX OR _gRPC_PLATFORM_POSIX)
+   include(cmake/systemd.cmake)
+   set(_gRPC_ALLTARGETS_LIBRARIES ${_gRPC_ALLTARGETS_LIBRARIES} ${_gRPC_SYSTEMD_LIBRARIES})
+@@ -1373,8 +1380,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/address_sorting.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/address_sorting.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -1471,8 +1479,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/gpr.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/gpr.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -2338,8 +2347,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -2498,8 +2508,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc_test_util.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc_test_util.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -2558,8 +2569,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc_test_util_unsecure.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc_test_util_unsecure.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -2973,8 +2985,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc_unsecure.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc_unsecure.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -3153,8 +3166,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/benchmark_helpers.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/benchmark_helpers.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -3272,8 +3286,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc++.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc++.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -3540,8 +3555,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc++_alts.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc++_alts.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -3606,8 +3622,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc++_error_details.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc++_error_details.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -3678,8 +3695,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc++_reflection.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc++_reflection.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -3748,8 +3766,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc++_test.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc++_test.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -3815,8 +3834,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc++_test_config.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc++_test_config.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -3888,8 +3908,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc++_test_util.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc++_test_util.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -3976,8 +3997,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc++_unsecure.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc++_unsecure.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -4482,8 +4504,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc_authorization_provider.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc_authorization_provider.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -4631,8 +4654,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpc_plugin_support.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpc_plugin_support.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -4705,8 +4729,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/grpcpp_channelz.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/grpcpp_channelz.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -4820,8 +4845,9 @@ if(WIN32 AND MSVC)
+     COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+   )
+   if(gRPC_INSTALL)
+-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/upb.pdb
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/upb.pdb
+       DESTINATION ${gRPC_INSTALL_LIBDIR} OPTIONAL
++      CONFIGURATIONS Debug 
+     )
+   endif()
+ endif()
+@@ -26091,10 +26117,12 @@ if(gRPC_INSTALL)
+     DESTINATION ${gRPC_INSTALL_CMAKEDIR}
+     NAMESPACE gRPC::
+   )
++  if(gRPC_BUILD_CODEGEN)
+   install(EXPORT gRPCPluginTargets
+     DESTINATION ${gRPC_INSTALL_CMAKEDIR}
+     NAMESPACE gRPC::
+   )
++  endif()
+ endif()
+ 
+ include(CMakePackageConfigHelpers)
+diff --git a/src/core/lib/gprpp/time.h b/src/core/lib/gprpp/time.h
+index 557139eb46..f1715b5aab 100644
+--- a/src/core/lib/gprpp/time.h
++++ b/src/core/lib/gprpp/time.h
+@@ -310,8 +310,8 @@ inline Timestamp operator+(Duration lhs, Timestamp rhs) { return rhs + lhs; }
+ 
+ inline Duration operator-(Timestamp lhs, Timestamp rhs) {
+   return Duration::Milliseconds(
+-      time_detail::MillisAdd(lhs.milliseconds_after_process_epoch(),
+-                             -rhs.milliseconds_after_process_epoch()));
++      time_detail::MillisAdd((int64_t)lhs.milliseconds_after_process_epoch(),
++                             -((int64_t)rhs.milliseconds_after_process_epoch())));
+ }
+ 
+ inline Duration operator*(Duration lhs, double rhs) {
+diff --git a/third_party/upb/upb/collections/array_internal.h b/third_party/upb/upb/collections/array_internal.h
+index cb842f5c36..a23c7f666b 100644
+--- a/third_party/upb/upb/collections/array_internal.h
++++ b/third_party/upb/upb/collections/array_internal.h
+@@ -117,7 +117,7 @@ UPB_INLINE bool _upb_Array_ResizeUninitialized(upb_Array* arr, size_t size,
+ UPB_INLINE void _upb_Array_Set(upb_Array* arr, size_t i, const void* data,
+                                size_t elem_size) {
+   UPB_ASSERT(i < arr->size);
+-  UPB_ASSERT(elem_size == 1U << _upb_Array_ElementSizeLg2(arr));
++  UPB_ASSERT(elem_size == (size_t)(1ULL << _upb_Array_ElementSizeLg2(arr)));
+   char* arr_data = (char*)_upb_array_ptr(arr);
+   memcpy(arr_data + (i * elem_size), data, elem_size);
+ }
