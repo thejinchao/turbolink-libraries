@@ -26,3 +26,22 @@ cmake -G "Visual Studio 16 2019" ^
 cmake --build . --target INSTALL --config Debug --parallel
 cmake --build . --target INSTALL --config Release --parallel
 ```
+### 2. Android(armv7, arm64, x64)
+```
+mkdir %TL_LIBRARIES_PATH%\_build\android\re2 & cd %TL_LIBRARIES_PATH%\_build\android\re2
+for /d %a in (armeabi-v7a arm64-v8a x86_64) do (
+mkdir %a & pushd %a ^
+ & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" -G "Ninja Multi-Config" ^
+ -DCMAKE_TOOLCHAIN_FILE="%NDKROOT%\build\cmake\android.toolchain.cmake" ^
+ -DCMAKE_MAKE_PROGRAM=%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\ninja.exe ^
+ -DANDROID_ABI=%a -DANDROID_PLATFORM=21 ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/re2 ^
+ -DCMAKE_INSTALL_LIBDIR="lib/android/%a/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DCMAKE_INSTALL_CMAKEDIR=lib/android/%a/cmake -DRE2_BUILD_TESTING=OFF ^
+ %TL_LIBRARIES_PATH%/Source/re2/re2-20220601 ^
+ & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" --build . --target install --config Debug ^
+ & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" --build . --target install --config Release ^
+ & popd
+)
+```
+
