@@ -37,10 +37,19 @@ index 0493bccef..7f4c8fffc 100644
  #else
    std::atomic<Scalar> atom_;
 diff --git a/src/google/protobuf/port_def.inc b/src/google/protobuf/port_def.inc
-index 18d7ccfe8..23dfdcb5a 100644
+index 18d7ccfe8..573668fa2 100644
 --- a/src/google/protobuf/port_def.inc
 +++ b/src/google/protobuf/port_def.inc
-@@ -1062,7 +1062,7 @@ static_assert(PROTOBUF_ABSL_MIN(20230125, 3),
+@@ -998,6 +998,8 @@ static_assert(PROTOBUF_ABSL_MIN(20230125, 3),
+ // effectively but which people turn on anyways.
+ #ifdef __clang__
+ #pragma clang diagnostic push
++//disabling warnings with newer compilers without breaking builds with older compilers.
++#pragma clang diagnostic ignored "-Wunknown-warning-option"
+ // -Wshorten-64-to-32 is a typical pain where we diff pointers.
+ //   char* p = strchr(s, '\n');
+ //   return p ? p - s : -1;
+@@ -1062,7 +1064,7 @@ static_assert(PROTOBUF_ABSL_MIN(20230125, 3),
  #pragma warning(disable: 4125)
  #endif
  
