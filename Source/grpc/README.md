@@ -44,3 +44,34 @@ cmake -G "Visual Studio 16 2019" ^
 cmake --build . --target INSTALL --config Debug --parallel
 cmake --build . --target INSTALL --config Release --parallel
 ```
+### 2. Android(armv7, arm64, x64)
+```
+mkdir %TL_LIBRARIES_PATH%\_build\android\grpc & cd %TL_LIBRARIES_PATH%\_build\android\grpc
+for /d %i in (armeabi-v7a.ARMv7 arm64-v8a.ARM64 x86_64.x64) do (
+for /f "tokens=1,2 delims=." %a in ("%i") do (
+mkdir %a & pushd %a ^
+ & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" -G "Ninja Multi-Config" ^
+ -DCMAKE_TOOLCHAIN_FILE="%NDKROOT%\build\cmake\android.toolchain.cmake" ^
+ -DCMAKE_MAKE_PROGRAM=%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\ninja.exe ^
+ -DANDROID_ABI=%a -DANDROID_PLATFORM=21 ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/grpc ^
+ -DgRPC_INSTALL_LIBDIR="lib/android/%a/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DgRPC_INSTALL_CMAKEDIR=lib/android/%a/cmake ^
+ -DgRPC_ABSL_PROVIDER=package -Dabsl_DIR="%TL_LIBRARIES_PATH%/output/abseil/lib/android/%a/cmake" ^
+ -DgRPC_RE2_PROVIDER=package -Dre2_DIR="%TL_LIBRARIES_PATH%/output/re2/lib/android/%a/cmake" ^
+ -DgRPC_PROTOBUF_PROVIDER=package ^
+ -DProtobuf_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/android/%a/cmake" ^
+ -Dutf8_range_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/android/%a/cmake" ^
+ -DgRPC_USE_CARES=OFF -DgRPC_ZLIB_PROVIDER=package ^
+ -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/zlib-1.2.5/Inc" ^
+ -DgRPC_SSL_PROVIDER=package ^
+ -DOPENSSL_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/include/Android" ^
+ -DOPENSSL_SSL_LIBRARY="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Android/%b/libssl.a" ^
+ -DOPENSSL_CRYPTO_LIBRARY="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Android/%b/libcrypto.a" ^
+ -DgRPC_BUILD_CODEGEN=OFF -DgRPC_BUILD_CSHARP_EXT=OFF ^
+ %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.55 ^
+ & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" --build . --target install --config Debug ^
+ & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" --build . --target install --config Release ^
+ & popd
+))
+```
