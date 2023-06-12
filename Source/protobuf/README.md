@@ -52,3 +52,20 @@ mkdir %a & pushd %a ^
  & popd
 )
 ```
+### 3. Linux
+```
+mkdir %TL_LIBRARIES_PATH%\_build\linux\protobuf & cd %TL_LIBRARIES_PATH%\_build\linux\protobuf
+cmake -G "Ninja Multi-Config" -DCMAKE_MAKE_PROGRAM=%NINJA_EXE_PATH% ^
+ -DCMAKE_TOOLCHAIN_FILE="%TL_LIBRARIES_PATH%\BuildTools\linux\ue4-linux-cross-compile.cmake" ^
+ -DUE_THIRD_PARTY_PATH=%UE_THIRD_PARTY_PATH% -Dprotobuf_DEBUG_POSTFIX="" ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/protobuf ^
+ -DCMAKE_INSTALL_LIBDIR="lib/linux/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DCMAKE_INSTALL_CMAKEDIR=lib/linux/cmake ^
+ -Dprotobuf_BUILD_TESTS=false -Dprotobuf_WITH_ZLIB=false ^
+ -Dprotobuf_BUILD_EXAMPLES=false ^
+ -Dprotobuf_BUILD_PROTOC_BINARIES=false -Dprotobuf_BUILD_LIBPROTOC=false ^
+ -Dprotobuf_ABSL_PROVIDER=package -Dabsl_DIR="%TL_LIBRARIES_PATH%/output/abseil/lib/linux/cmake" ^
+ %TL_LIBRARIES_PATH%/Source/protobuf/protobuf-4.23.x
+cmake --build . --target install --config Debug
+cmake --build . --target install --config Release
+```

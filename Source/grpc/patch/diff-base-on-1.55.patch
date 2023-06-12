@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 8b289a0aab..18d81752bc 100644
+index 8b289a0aab..e58630c952 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -49,6 +49,7 @@ option(gRPC_BUILD_TESTS "Build tests" OFF)
@@ -10,7 +10,18 @@ index 8b289a0aab..18d81752bc 100644
  
  set(gRPC_INSTALL_default ON)
  if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-@@ -318,7 +319,6 @@ include(cmake/ccache.cmake)
+@@ -272,6 +273,10 @@ endif()
+ if (MINGW)
+   add_definitions(-D_WIN32_WINNT=0x600)
+ endif()
++if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
++  # Clang warning suppressions
++  add_definitions(-Wno-deprecated-register)
++endif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_gRPC_C_CXX_FLAGS}")
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_gRPC_C_CXX_FLAGS}")
+ 
+@@ -318,7 +323,6 @@ include(cmake/ccache.cmake)
  include(cmake/abseil-cpp.cmake)
  include(cmake/address_sorting.cmake)
  include(cmake/benchmark.cmake)
@@ -18,7 +29,7 @@ index 8b289a0aab..18d81752bc 100644
  include(cmake/protobuf.cmake)
  include(cmake/re2.cmake)
  include(cmake/ssl.cmake)
-@@ -327,6 +327,13 @@ include(cmake/xxhash.cmake)
+@@ -327,6 +331,13 @@ include(cmake/xxhash.cmake)
  include(cmake/zlib.cmake)
  include(cmake/download_archive.cmake)
  
@@ -32,7 +43,7 @@ index 8b289a0aab..18d81752bc 100644
  if(_gRPC_PLATFORM_LINUX OR _gRPC_PLATFORM_POSIX)
    include(cmake/systemd.cmake)
    set(_gRPC_ALLTARGETS_LIBRARIES ${_gRPC_ALLTARGETS_LIBRARIES} ${_gRPC_SYSTEMD_LIBRARIES})
-@@ -1373,8 +1380,9 @@ if(WIN32 AND MSVC)
+@@ -1373,8 +1384,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -43,7 +54,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -1471,8 +1479,9 @@ if(WIN32 AND MSVC)
+@@ -1471,8 +1483,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -54,7 +65,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -2338,8 +2347,9 @@ if(WIN32 AND MSVC)
+@@ -2338,8 +2351,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -65,7 +76,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -2498,8 +2508,9 @@ if(WIN32 AND MSVC)
+@@ -2498,8 +2512,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -76,7 +87,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -2558,8 +2569,9 @@ if(WIN32 AND MSVC)
+@@ -2558,8 +2573,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -87,7 +98,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -2973,8 +2985,9 @@ if(WIN32 AND MSVC)
+@@ -2973,8 +2989,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -98,7 +109,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -3153,8 +3166,9 @@ if(WIN32 AND MSVC)
+@@ -3153,8 +3170,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -109,7 +120,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -3272,8 +3286,9 @@ if(WIN32 AND MSVC)
+@@ -3272,8 +3290,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -120,7 +131,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -3540,8 +3555,9 @@ if(WIN32 AND MSVC)
+@@ -3540,8 +3559,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -131,7 +142,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -3606,8 +3622,9 @@ if(WIN32 AND MSVC)
+@@ -3606,8 +3626,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -142,7 +153,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -3678,8 +3695,9 @@ if(WIN32 AND MSVC)
+@@ -3678,8 +3699,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -153,7 +164,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -3748,8 +3766,9 @@ if(WIN32 AND MSVC)
+@@ -3748,8 +3770,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -164,7 +175,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -3815,8 +3834,9 @@ if(WIN32 AND MSVC)
+@@ -3815,8 +3838,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -175,7 +186,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -3888,8 +3908,9 @@ if(WIN32 AND MSVC)
+@@ -3888,8 +3912,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -186,7 +197,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -3976,8 +3997,9 @@ if(WIN32 AND MSVC)
+@@ -3976,8 +4001,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -197,7 +208,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -4482,8 +4504,9 @@ if(WIN32 AND MSVC)
+@@ -4482,8 +4508,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -208,7 +219,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -4631,8 +4654,9 @@ if(WIN32 AND MSVC)
+@@ -4631,8 +4658,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -219,7 +230,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -4705,8 +4729,9 @@ if(WIN32 AND MSVC)
+@@ -4705,8 +4733,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -230,7 +241,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -4820,8 +4845,9 @@ if(WIN32 AND MSVC)
+@@ -4820,8 +4849,9 @@ if(WIN32 AND MSVC)
      COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
    )
    if(gRPC_INSTALL)
@@ -241,7 +252,7 @@ index 8b289a0aab..18d81752bc 100644
      )
    endif()
  endif()
-@@ -26091,10 +26117,12 @@ if(gRPC_INSTALL)
+@@ -26091,10 +26121,12 @@ if(gRPC_INSTALL)
      DESTINATION ${gRPC_INSTALL_CMAKEDIR}
      NAMESPACE gRPC::
    )

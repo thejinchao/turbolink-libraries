@@ -1,3 +1,19 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1fb018b61..ff9e0ea0b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -320,6 +320,11 @@ else (MSVC)
+   set(LIB_PREFIX)
+ endif (MSVC)
+ 
++if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
++  # Clang warning suppressions
++  add_definitions(-Wall -Werror -Wno-deprecated-register -Wno-unused-function)
++endif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
++
+ include_directories(
+   ${ZLIB_INCLUDE_DIRECTORIES}
+   ${protobuf_BINARY_DIR}
 diff --git a/cmake/install.cmake b/cmake/install.cmake
 index e7eb2103b..ed8998b11 100644
 --- a/cmake/install.cmake
@@ -71,6 +87,25 @@ index 057565a41..5a87e6d9c 100644
    using Buffer = __uint128_t;
  #else
    using Buffer = uint64_t;
+diff --git a/src/google/protobuf/stubs/port.h b/src/google/protobuf/stubs/port.h
+index e1c920185..020b9dc16 100644
+--- a/src/google/protobuf/stubs/port.h
++++ b/src/google/protobuf/stubs/port.h
+@@ -86,8 +86,13 @@
+ #include <intrin.h>
+ #elif defined(__APPLE__)
+ #include <libkern/OSByteOrder.h>
+-#elif defined(__linux__) || defined(__ANDROID__) || defined(__CYGWIN__)
++#elif defined(__ANDROID__)
+ #include <byteswap.h>  // IWYU pragma: export
++#elif defined(__linux__) || defined(__CYGWIN__)
++#include <bits/byteswap.h>
++#define bswap_16(x) __bswap_16 (x)
++#define bswap_32(x) __bswap_32 (x)
++#define bswap_64(x) __bswap_64 (x)
+ #endif
+ 
+ // Legacy: some users reference these (internal-only) macros even though we
 diff --git a/third_party/utf8_range/CMakeLists.txt b/third_party/utf8_range/CMakeLists.txt
 index 344952d38..c22664af3 100644
 --- a/third_party/utf8_range/CMakeLists.txt
