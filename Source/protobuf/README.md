@@ -83,3 +83,18 @@ cmake -G "Unix Makefiles" \
  $TL_LIBRARIES_PATH/Source/protobuf/protobuf-4.23.x
 cmake --build . --target install --config Release
 ```
+### 5. iOS
+```
+mkdir -p $TL_LIBRARIES_PATH/_build/ios/protobuf && cd $TL_LIBRARIES_PATH/_build/ios/protobuf
+cmake -G "Unix Makefiles" \
+ -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/output/protobuf \
+ -DCMAKE_TOOLCHAIN_FILE=$TL_LIBRARIES_PATH/BuildTools/Apple/ios.toolchain.cmake \
+ -DCMAKE_INSTALL_LIBDIR=lib/ios -DPLATFORM=OS64 -DDEPLOYMENT_TARGET=12.0 \
+ -DCMAKE_INSTALL_CMAKEDIR=lib/ios/cmake -DCMAKE_CXX_STANDARD=14 \
+ -Dprotobuf_BUILD_TESTS=false -Dprotobuf_WITH_ZLIB=false \
+ -Dprotobuf_BUILD_EXAMPLES=false \
+ -Dprotobuf_BUILD_PROTOC_BINARIES=false -Dprotobuf_BUILD_LIBPROTOC=false \
+ -Dprotobuf_ABSL_PROVIDER=package -Dabsl_DIR="$TL_LIBRARIES_PATH/output/abseil/lib/iOS/cmake" \
+ $TL_LIBRARIES_PATH/Source/protobuf/protobuf-4.23.x
+cmake --build . --target install --config Release
+```

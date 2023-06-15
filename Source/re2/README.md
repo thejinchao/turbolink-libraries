@@ -69,4 +69,16 @@ cmake -G "Unix Makefiles" \
  $TL_LIBRARIES_PATH/Source/re2/re2-20220601
 cmake --build . --target install --config Release
 ```
+### 5. iOS
+```
+mkdir -p $TL_LIBRARIES_PATH/_build/ios/re2 && cd $TL_LIBRARIES_PATH/_build/ios/re2
+cmake -G "Unix Makefiles" \
+ -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/output/re2 \
+ -DCMAKE_TOOLCHAIN_FILE=$TL_LIBRARIES_PATH/BuildTools/Apple/ios.toolchain.cmake \
+ -DCMAKE_INSTALL_LIBDIR=lib/ios -DPLATFORM=OS64 -DDEPLOYMENT_TARGET=12.0 \
+ -DCMAKE_INSTALL_CMAKEDIR=lib/ios/cmake \
+ -DCMAKE_CXX_STANDARD=14 -DRE2_BUILD_TESTING=OFF \
+ $TL_LIBRARIES_PATH/Source/re2/re2-20220601
+cmake --build . --target install --config Release
+```
 

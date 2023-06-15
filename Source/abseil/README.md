@@ -70,3 +70,15 @@ cmake -G "Unix Makefiles" \
  $TL_LIBRARIES_PATH/Source/abseil/abseil-20230125
 cmake --build . --target install --config Release
 ```
+### 5. iOS
+```
+mkdir -p $TL_LIBRARIES_PATH/_build/ios/abseil && cd $TL_LIBRARIES_PATH/_build/ios/abseil
+cmake -G "Unix Makefiles" \
+ -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/output/abseil \
+ -DCMAKE_TOOLCHAIN_FILE=$TL_LIBRARIES_PATH/BuildTools/Apple/ios.toolchain.cmake \
+ -DCMAKE_INSTALL_LIBDIR=lib/ios -DPLATFORM=OS64 -DDEPLOYMENT_TARGET=12.0 \
+ -DCMAKE_INSTALL_CMAKEDIR=lib/ios/cmake \
+ -DCMAKE_CXX_STANDARD=14 -DBUILD_TESTING=False -DABSL_PROPAGATE_CXX_STD=True \
+ $TL_LIBRARIES_PATH/Source/abseil/abseil-20230125
+cmake --build . --target install --config Release
+```
