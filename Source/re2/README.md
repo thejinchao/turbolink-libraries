@@ -58,4 +58,15 @@ cmake -G "Ninja Multi-Config" -DCMAKE_MAKE_PROGRAM=%NINJA_EXE_PATH% ^
 cmake --build . --target install --config Debug
 cmake --build . --target install --config Release
 ```
+### 4. Mac
+```
+mkdir -p $TL_LIBRARIES_PATH/_build/mac/re2 && cd $TL_LIBRARIES_PATH/_build/mac/re2
+cmake -G "Unix Makefiles" \
+ -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/output/re2 \
+ -DCMAKE_INSTALL_LIBDIR=lib/mac -DCMAKE_OSX_DEPLOYMENT_TARGET=10.14 \
+ -DCMAKE_INSTALL_CMAKEDIR=lib/mac/cmake \
+ -DCMAKE_CXX_STANDARD=14 -DRE2_BUILD_TESTING=OFF \
+ $TL_LIBRARIES_PATH/Source/re2/re2-20220601
+cmake --build . --target install --config Release
+```
 

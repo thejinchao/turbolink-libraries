@@ -107,3 +107,31 @@ cmake -G "Ninja Multi-Config" -DCMAKE_MAKE_PROGRAM=%NINJA_EXE_PATH% ^
 cmake --build . --target install --config Debug
 cmake --build . --target install --config Release
 ```
+### 4. Mac
+```
+mkdir -p $TL_LIBRARIES_PATH/_build/mac/grpc && cd $TL_LIBRARIES_PATH/_build/mac/grpc
+cmake -G "Unix Makefiles" \
+ -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/output/grpc \
+ -DgRPC_INSTALL_LIBDIR=lib/mac -DgRPC_INSTALL_CMAKEDIR=lib/mac/cmake \
+ -DCMAKE_OSX_DEPLOYMENT_TARGET=10.14 -DCMAKE_CXX_STANDARD=14 \
+ -DgRPC_ABSL_PROVIDER=package -Dabsl_DIR="$TL_LIBRARIES_PATH/output/abseil/lib/mac/cmake" \
+ -DgRPC_RE2_PROVIDER=package -Dre2_DIR="$TL_LIBRARIES_PATH/output/re2/lib/mac/cmake" \
+ -DgRPC_PROTOBUF_PROVIDER=package \
+ -DProtobuf_DIR="$TL_LIBRARIES_PATH/output/protobuf/lib/mac/cmake" \
+ -Dutf8_range_DIR="$TL_LIBRARIES_PATH/output/protobuf/lib/Mac/cmake" \
+ -DgRPC_USE_CARES=OFF -DgRPC_ZLIB_PROVIDER=package \
+ -DZLIB_INCLUDE_DIR="$UE_THIRD_PARTY_PATH/zlib/v1.2.8/include" \
+ -DZLIB_LIBRARY_RELEASE="$UE_THIRD_PARTY_PATH/zlib/v1.2.8/lib/Mac/libz.a" \
+ -DZLIB_LIBRARY_DEBUG="$UE_THIRD_PARTY_PATH/zlib/v1.2.8/lib/Mac/libz.a" \
+ -DgRPC_SSL_PROVIDER=package \
+ -DOPENSSL_INCLUDE_DIR="$UE_THIRD_PARTY_PATH/OpenSSL/1.1.1k/include/Mac" \
+ -DOPENSSL_SSL_LIBRARY="$UE_THIRD_PARTY_PATH/OpenSSL/1.1.1k/lib/Mac/libssl.a" \
+ -DOPENSSL_CRYPTO_LIBRARY="$UE_THIRD_PARTY_PATH/OpenSSL/1.1.1k/lib/Mac/libcrypto.a" \
+ -DgRPC_BUILD_CODEGEN=OFF -DgRPC_BUILD_CSHARP_EXT=OFF \
+ -DgRPC_BUILD_GRPC_CPP_PLUGIN=OFF -DgRPC_BUILD_GRPC_CSHARP_PLUGIN=OFF \
+ -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
+ -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
+ -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF \
+ $TL_LIBRARIES_PATH/Source/grpc/grpc-1.55
+cmake --build . --target install --config Release
+```

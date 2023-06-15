@@ -69,3 +69,17 @@ cmake -G "Ninja Multi-Config" -DCMAKE_MAKE_PROGRAM=%NINJA_EXE_PATH% ^
 cmake --build . --target install --config Debug
 cmake --build . --target install --config Release
 ```
+### 4. Mac
+```
+mkdir -p $TL_LIBRARIES_PATH/_build/mac/protobuf && cd $TL_LIBRARIES_PATH/_build/mac/protobuf
+cmake -G "Unix Makefiles" \
+ -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/output/protobuf \
+ -DCMAKE_INSTALL_LIBDIR=lib/mac -DCMAKE_OSX_DEPLOYMENT_TARGET=10.14 \
+ -DCMAKE_INSTALL_CMAKEDIR=lib/mac/cmake -DCMAKE_CXX_STANDARD=14 \
+ -Dprotobuf_BUILD_TESTS=false -Dprotobuf_WITH_ZLIB=false \
+ -Dprotobuf_BUILD_EXAMPLES=false \
+ -Dprotobuf_BUILD_PROTOC_BINARIES=false -Dprotobuf_BUILD_LIBPROTOC=false \
+ -Dprotobuf_ABSL_PROVIDER=package -Dabsl_DIR="$TL_LIBRARIES_PATH/output/abseil/lib/mac/cmake" \
+ $TL_LIBRARIES_PATH/Source/protobuf/protobuf-4.23.x
+cmake --build . --target install --config Release
+```
