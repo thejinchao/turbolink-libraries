@@ -63,7 +63,8 @@ cmake --build . --target install --config Release
 mkdir -p $TL_LIBRARIES_PATH/_build/mac/re2 && cd $TL_LIBRARIES_PATH/_build/mac/re2
 cmake -G "Unix Makefiles" \
  -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/output/re2 \
- -DCMAKE_INSTALL_LIBDIR=lib/mac -DCMAKE_OSX_DEPLOYMENT_TARGET=10.14 \
+ -DCMAKE_TOOLCHAIN_FILE=$TL_LIBRARIES_PATH/BuildTools/Apple/ios.toolchain.cmake \
+ -DCMAKE_INSTALL_LIBDIR=lib/mac -DPLATFORM=MAC_UNIVERSAL -DDEPLOYMENT_TARGET=10.14 \
  -DCMAKE_INSTALL_CMAKEDIR=lib/mac/cmake \
  -DCMAKE_CXX_STANDARD=14 -DRE2_BUILD_TESTING=OFF \
  $TL_LIBRARIES_PATH/Source/re2/re2-20220601

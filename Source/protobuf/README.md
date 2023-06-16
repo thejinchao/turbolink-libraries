@@ -74,7 +74,8 @@ cmake --build . --target install --config Release
 mkdir -p $TL_LIBRARIES_PATH/_build/mac/protobuf && cd $TL_LIBRARIES_PATH/_build/mac/protobuf
 cmake -G "Unix Makefiles" \
  -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/output/protobuf \
- -DCMAKE_INSTALL_LIBDIR=lib/mac -DCMAKE_OSX_DEPLOYMENT_TARGET=10.14 \
+ -DCMAKE_TOOLCHAIN_FILE=$TL_LIBRARIES_PATH/BuildTools/Apple/ios.toolchain.cmake \
+ -DCMAKE_INSTALL_LIBDIR=lib/mac -DPLATFORM=MAC_UNIVERSAL -DDEPLOYMENT_TARGET=10.14 \
  -DCMAKE_INSTALL_CMAKEDIR=lib/mac/cmake -DCMAKE_CXX_STANDARD=14 \
  -Dprotobuf_BUILD_TESTS=false -Dprotobuf_WITH_ZLIB=false \
  -Dprotobuf_BUILD_EXAMPLES=false \

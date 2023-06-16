@@ -113,7 +113,8 @@ mkdir -p $TL_LIBRARIES_PATH/_build/mac/grpc && cd $TL_LIBRARIES_PATH/_build/mac/
 cmake -G "Unix Makefiles" \
  -DCMAKE_INSTALL_PREFIX=$TL_LIBRARIES_PATH/output/grpc \
  -DgRPC_INSTALL_LIBDIR=lib/mac -DgRPC_INSTALL_CMAKEDIR=lib/mac/cmake \
- -DCMAKE_OSX_DEPLOYMENT_TARGET=10.14 -DCMAKE_CXX_STANDARD=14 \
+ -DCMAKE_TOOLCHAIN_FILE=$TL_LIBRARIES_PATH/BuildTools/Apple/ios.toolchain.cmake \
+ -DPLATFORM=MAC_UNIVERSAL -DDEPLOYMENT_TARGET=10.14 -DCMAKE_CXX_STANDARD=14 \
  -DgRPC_ABSL_PROVIDER=package -Dabsl_DIR="$TL_LIBRARIES_PATH/output/abseil/lib/mac/cmake" \
  -DgRPC_RE2_PROVIDER=package -Dre2_DIR="$TL_LIBRARIES_PATH/output/re2/lib/mac/cmake" \
  -DgRPC_PROTOBUF_PROVIDER=package \
