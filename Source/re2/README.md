@@ -82,4 +82,16 @@ cmake -G "Unix Makefiles" \
  $TL_LIBRARIES_PATH/Source/re2/re2-20220601
 cmake --build . --target install --config Release
 ```
+### 6. PlayStation 5
+```
+mkdir %TL_LIBRARIES_PATH%\_build\ps5\re2 & cd %TL_LIBRARIES_PATH%\_build\ps5\re2
+"%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5CMake.bat" -G "Visual Studio 16 2019" ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/re2 ^
+ -DCMAKE_INSTALL_LIBDIR="lib/ps5/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DCMAKE_INSTALL_CMAKEDIR=lib/ps5/cmake -DCMAKE_CXX_STANDARD=14 ^
+ -DRE2_BUILD_TESTING=OFF ^
+ %TL_LIBRARIES_PATH%/Source/re2/re2-20220601
+cmake --build . --target INSTALL --config Debug
+cmake --build . --target INSTALL --config Release
+```
 
