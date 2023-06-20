@@ -37,11 +37,47 @@ index f452a676..c8dc2c84 100644
      else()
        message(FATAL_ERROR "Invalid build type: ${_build_type}")
      endif()
+diff --git a/CMake/abslConfig.cmake.in b/CMake/abslConfig.cmake.in
+index 62d246d0..381e8960 100644
+--- a/CMake/abslConfig.cmake.in
++++ b/CMake/abslConfig.cmake.in
+@@ -1,7 +1,15 @@
+ # absl CMake configuration file.
+ 
+ include(CMakeFindDependencyMacro)
+-find_dependency(Threads)
++if(__COMPILER_PS5)
++  set(Threads_FOUND ON)
++  set(CMAKE_USE_PTHREADS_INIT 1)
++  add_library(Threads::Threads INTERFACE IMPORTED)
++  set_property(TARGET Threads::Threads
++                 PROPERTY INTERFACE_LINK_LIBRARIES "libScePosix_stub_weak.a")
++else()
++  find_dependency(Threads)
++endif()
+ 
+ @PACKAGE_INIT@
+ 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 3a9e521f..41902ddd 100644
+index 3a9e521f..188d6b31 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -177,20 +177,21 @@ add_subdirectory(absl)
+@@ -109,7 +109,13 @@ endif()
+ 
+ # find dependencies
+ ## pthread
+-find_package(Threads REQUIRED)
++if(__COMPILER_PS5)
++  set(Threads_FOUND ON)
++  set(CMAKE_USE_PTHREADS_INIT 1)
++  add_library(Threads::Threads INTERFACE IMPORTED)
++else()
++  find_package(Threads REQUIRED)
++endif()
+ 
+ include(CMakeDependentOption)
+ 
+@@ -177,20 +183,21 @@ add_subdirectory(absl)
  
  if(ABSL_ENABLE_INSTALL)
    
@@ -66,7 +102,7 @@ index 3a9e521f..41902ddd 100644
    )
  
    # Abseil only has a version in LTS releases.  This mechanism is accomplished
-@@ -203,7 +204,7 @@ if(ABSL_ENABLE_INSTALL)
+@@ -203,7 +210,7 @@ if(ABSL_ENABLE_INSTALL)
      )
  
      install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
@@ -75,6 +111,194 @@ index 3a9e521f..41902ddd 100644
      )
    endif()  # absl_VERSION
  
+diff --git a/absl/base/CMakeLists.txt b/absl/base/CMakeLists.txt
+index 26e2b48a..8443db97 100644
+--- a/absl/base/CMakeLists.txt
++++ b/absl/base/CMakeLists.txt
+@@ -535,6 +535,7 @@ absl_cc_test(
+     GTest::gtest_main
+ )
+ 
++if(NOT(__COMPILER_PS5))
+ # Internal-only target, do not depend on directly.
+ absl_cc_library(
+   NAME
+@@ -561,6 +562,7 @@ absl_cc_test(
+     absl::scoped_set_env
+     GTest::gtest_main
+ )
++endif()
+ 
+ absl_cc_test(
+   NAME
+diff --git a/absl/base/internal/low_level_alloc.cc b/absl/base/internal/low_level_alloc.cc
+index 662167b0..672883c1 100644
+--- a/absl/base/internal/low_level_alloc.cc
++++ b/absl/base/internal/low_level_alloc.cc
+@@ -35,7 +35,11 @@
+ 
+ #ifndef _WIN32
+ #include <pthread.h>
++#if defined(__PROSPERO__)
++#include <sys/signal.h>
++#else
+ #include <signal.h>
++#endif
+ #include <sys/mman.h>
+ #include <unistd.h>
+ #else
+@@ -85,8 +89,14 @@ struct AllocList {
+     // Pointer to parent arena.
+     LowLevelAlloc::Arena *arena;
+ 
++#if defined(__PROSPERO__)
++    // The physical address corresponding to the virtual address start if direct
++    // memory is mapped(PlayStation5 only)
++    off_t sce_off;
++#else
+     // Aligns regions to 0 mod 2*sizeof(void*).
+     void *dummy_for_alignment;
++#endif
+   } header;
+ 
+   // Next two fields: in unallocated blocks: freelist skiplist data
+@@ -331,7 +341,9 @@ size_t GetPageSize() {
+   return std::max(system_info.dwPageSize, system_info.dwAllocationGranularity);
+ #elif defined(__wasm__) || defined(__asmjs__)
+   return getpagesize();
+-#else
++#elif defined(__PROSPERO__)
++  return SCE_KERNEL_PAGE_SIZE;
++#else 
+   return static_cast<size_t>(sysconf(_SC_PAGESIZE));
+ #endif
+ }
+@@ -414,6 +426,17 @@ bool LowLevelAlloc::DeleteArena(Arena *arena) {
+     } else {
+       munmap_result = base_internal::DirectMunmap(region, size);
+     }
++#elif defined(__PROSPERO__)
++    off_t offset = region->header.sce_off;
++    if (offset != 0) {
++      munmap_result = sceKernelMunmap(region, size);
++      ABSL_RAW_CHECK(munmap_result == 0, "sceKernelMunmap failed");
++
++      munmap_result = sceKernelReleaseDirectMemory(offset, size);
++      ABSL_RAW_CHECK(munmap_result == 0, "sceKernelReleaseDirectMemory failed");
++    } else {
++      munmap_result = 0;
++    }
+ #else
+     munmap_result = munmap(region, size);
+ #endif  // ABSL_LOW_LEVEL_ALLOC_ASYNC_SIGNAL_SAFE_MISSING
+@@ -562,6 +585,22 @@ static void *DoAllocWithArena(size_t request, LowLevelAlloc::Arena *arena) {
+         new_pages = mmap(nullptr, new_pages_size, PROT_WRITE | PROT_READ,
+                          MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+       }
++#elif defined(__PROSPERO__)
++      off_t off;
++      size_t memalign = 64 * 1024;
++      int ret = sceKernelAllocateDirectMemory(
++          0, (off_t)SCE_KERNEL_MAIN_DMEM_SIZE, new_pages_size, memalign,
++          SCE_KERNEL_MTYPE_C_SHARED, &off);
++      if (ret != 0) {
++        return nullptr;
++      }
++      new_pages = nullptr;
++      ret = sceKernelMapDirectMemory(
++          &new_pages, new_pages_size,
++          SCE_KERNEL_PROT_CPU_RW | SCE_KERNEL_PROT_AMPR_RW, 0, off, memalign);
++      if (ret != 0) {
++        return nullptr;
++      }
+ #else
+       new_pages = mmap(nullptr, new_pages_size, PROT_WRITE | PROT_READ,
+                        MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+@@ -577,6 +616,9 @@ static void *DoAllocWithArena(size_t request, LowLevelAlloc::Arena *arena) {
+       // Pretend the block is allocated; call AddToFreelist() to free it.
+       s->header.magic = Magic(kMagicAllocated, &s->header);
+       s->header.arena = arena;
++#if defined(__PROSPERO__)
++      s->header.sce_off = off;
++#endif
+       AddToFreelist(&s->levels, arena);  // insert new region into free list
+     }
+     AllocList *prev[kMaxLevel];
+@@ -589,6 +631,9 @@ static void *DoAllocWithArena(size_t request, LowLevelAlloc::Arena *arena) {
+       n->header.size = s->header.size - req_rnd;
+       n->header.magic = Magic(kMagicAllocated, &n->header);
+       n->header.arena = arena;
++#if defined(__PROSPERO__)
++      n->header.sce_off = 0;
++#endif
+       s->header.size = req_rnd;
+       AddToFreelist(&n->levels, arena);
+     }
+diff --git a/absl/base/internal/low_level_alloc.h b/absl/base/internal/low_level_alloc.h
+index eabb14a9..1fa7b14e 100644
+--- a/absl/base/internal/low_level_alloc.h
++++ b/absl/base/internal/low_level_alloc.h
+@@ -46,7 +46,7 @@
+ // for more information.
+ #ifdef ABSL_LOW_LEVEL_ALLOC_ASYNC_SIGNAL_SAFE_MISSING
+ #error ABSL_LOW_LEVEL_ALLOC_ASYNC_SIGNAL_SAFE_MISSING cannot be directly set
+-#elif defined(_WIN32) || defined(__asmjs__) || defined(__wasm__)
++#elif defined(_WIN32) || defined(__asmjs__) || defined(__wasm__) || defined(__PROSPERO__)
+ #define ABSL_LOW_LEVEL_ALLOC_ASYNC_SIGNAL_SAFE_MISSING 1
+ #endif
+ 
+diff --git a/absl/base/internal/raw_logging.cc b/absl/base/internal/raw_logging.cc
+index 6273e847..b82835ef 100644
+--- a/absl/base/internal/raw_logging.cc
++++ b/absl/base/internal/raw_logging.cc
+@@ -53,7 +53,7 @@
+ //   syscall(SYS_write, /*int*/ fd, /*char* */ buf, /*size_t*/ len);
+ // for low level operations that want to avoid libc.
+ #if (defined(__linux__) || defined(__FreeBSD__) || defined(__OpenBSD__)) && \
+-    !defined(__ANDROID__)
++    !defined(__ANDROID__) && !defined(__PROSPERO__)
+ #include <sys/syscall.h>
+ #define ABSL_HAVE_SYSCALL_WRITE 1
+ #define ABSL_LOW_LEVEL_WRITE_SUPPORTED 1
+diff --git a/absl/base/internal/sysinfo.cc b/absl/base/internal/sysinfo.cc
+index da499d3a..7efe9cd9 100644
+--- a/absl/base/internal/sysinfo.cc
++++ b/absl/base/internal/sysinfo.cc
+@@ -30,7 +30,7 @@
+ #include <sys/syscall.h>
+ #endif
+ 
+-#if defined(__APPLE__) || defined(__FreeBSD__)
++#if defined(__APPLE__) || defined(__FreeBSD__) && !defined(__PROSPERO__)
+ #include <sys/sysctl.h>
+ #endif
+ 
+diff --git a/absl/base/internal/thread_identity.cc b/absl/base/internal/thread_identity.cc
+index 79853f09..1f5db841 100644
+--- a/absl/base/internal/thread_identity.cc
++++ b/absl/base/internal/thread_identity.cc
+@@ -16,8 +16,12 @@
+ 
+ #if !defined(_WIN32) || defined(__MINGW32__)
+ #include <pthread.h>
++#if defined(__PROSPERO__)
++#include <sys/signal.h>
++#else
+ #include <signal.h>
+ #endif
++#endif
+ 
+ #include <atomic>
+ #include <cassert>
+@@ -79,7 +83,7 @@ void SetCurrentThreadIdentity(
+   absl::call_once(init_thread_identity_key_once, AllocateThreadIdentityKey,
+                   reclaimer);
+ 
+-#if defined(__EMSCRIPTEN__) || defined(__MINGW32__)
++#if defined(__EMSCRIPTEN__) || defined(__MINGW32__) || defined(__PROSPERO__)
+   // Emscripten and MinGW pthread implementations does not support signals.
+   // See https://kripken.github.io/emscripten-site/docs/porting/pthreads.html
+   // for more information.
 diff --git a/absl/container/internal/btree.h b/absl/container/internal/btree.h
 index d734676a..e07d9d64 100644
 --- a/absl/container/internal/btree.h
@@ -110,6 +334,135 @@ index 2bff11db..275a856b 100644
  
    // Size routines.
    size_type size() const { return tree_.size(); }
+diff --git a/absl/container/internal/raw_hash_set.h b/absl/container/internal/raw_hash_set.h
+index 61ef196d..194ea0b6 100644
+--- a/absl/container/internal/raw_hash_set.h
++++ b/absl/container/internal/raw_hash_set.h
+@@ -1696,7 +1696,11 @@ class raw_hash_set {
+   }
+ 
+   raw_hash_set& operator=(raw_hash_set&& that) noexcept(
++#if _HAS_CPP17
+       absl::allocator_traits<allocator_type>::is_always_equal::value&&
++#else
++      std::is_empty<allocator_type>::type::value&&
++#endif
+           std::is_nothrow_move_assignable<hasher>::value&&
+               std::is_nothrow_move_assignable<key_equal>::value) {
+     // TODO(sbenza): We should only use the operations from the noexcept clause
+diff --git a/absl/debugging/CMakeLists.txt b/absl/debugging/CMakeLists.txt
+index 8f29cc07..789f22da 100644
+--- a/absl/debugging/CMakeLists.txt
++++ b/absl/debugging/CMakeLists.txt
+@@ -129,6 +129,7 @@ absl_cc_library(
+     absl::raw_logging_internal
+ )
+ 
++if(NOT(__COMPILER_PS5))
+ absl_cc_library(
+   NAME
+     failure_signal_handler
+@@ -164,6 +165,7 @@ absl_cc_test(
+     Threads::Threads
+     GTest::gmock
+ )
++endif()
+ 
+ # Internal-only target, do not depend on directly.
+ absl_cc_library(
+diff --git a/absl/debugging/internal/elf_mem_image.h b/absl/debugging/internal/elf_mem_image.h
+index 113071a9..7855d6cc 100644
+--- a/absl/debugging/internal/elf_mem_image.h
++++ b/absl/debugging/internal/elf_mem_image.h
+@@ -33,7 +33,7 @@
+ 
+ #if defined(__ELF__) && !defined(__OpenBSD__) && !defined(__QNX__) && \
+     !defined(__native_client__) && !defined(__asmjs__) &&             \
+-    !defined(__wasm__) && !defined(__HAIKU__)
++    !defined(__wasm__) && !defined(__HAIKU__) && !defined(__PROSPERO__)
+ #define ABSL_HAVE_ELF_MEM_IMAGE 1
+ #endif
+ 
+diff --git a/absl/debugging/internal/examine_stack.cc b/absl/debugging/internal/examine_stack.cc
+index 57863228..e3b20ff8 100644
+--- a/absl/debugging/internal/examine_stack.cc
++++ b/absl/debugging/internal/examine_stack.cc
+@@ -30,7 +30,9 @@
+ #include <sys/ucontext.h>
+ #endif
+ 
++#if !defined(__PROSPERO__)
+ #include <csignal>
++#endif
+ #include <cstdio>
+ 
+ #include "absl/base/attributes.h"
+@@ -53,7 +55,7 @@ ABSL_CONST_INIT SymbolizeUrlEmitter debug_stack_trace_hook = nullptr;
+ 
+ // Async-signal safe mmap allocator.
+ void* Allocate(size_t num_bytes) {
+-#ifdef ABSL_HAVE_MMAP
++#if defined(ABSL_HAVE_MMAP) && !defined(__PROSPERO__)
+   void* p = ::mmap(nullptr, num_bytes, PROT_READ | PROT_WRITE,
+                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+   return p == MAP_FAILED ? nullptr : p;
+@@ -64,7 +66,7 @@ void* Allocate(size_t num_bytes) {
+ }
+ 
+ void Deallocate(void* p, size_t size) {
+-#ifdef ABSL_HAVE_MMAP
++#if defined(ABSL_HAVE_MMAP) && !defined(__PROSPERO__)
+   ::munmap(p, size);
+ #else
+   (void)p;
+diff --git a/absl/flags/parse.cc b/absl/flags/parse.cc
+index fa953f55..29133175 100644
+--- a/absl/flags/parse.cc
++++ b/absl/flags/parse.cc
+@@ -245,6 +245,10 @@ bool GetEnvVar(const char* var_name, std::string& var_value) {
+   }
+ 
+   var_value = std::string(buf, get_res);
++#elif defined(__PROSPERO__)
++  (void)var_name;
++  (void)var_value;
++  return false;
+ #else
+   const char* val = ::getenv(var_name);
+   if (val == nullptr) {
+diff --git a/absl/log/flags.cc b/absl/log/flags.cc
+index b5308881..62e87fa3 100644
+--- a/absl/log/flags.cc
++++ b/absl/log/flags.cc
+@@ -50,7 +50,12 @@ ABSL_ATTRIBUTE_UNUSED const bool unused = RegisterSyncLoggingFlags();
+ 
+ template <typename T>
+ T GetFromEnv(const char* varname, T dflt) {
++#if defined(__PROSPERO__)
++  (void)varname;
++  const char* val = nullptr;
++#else
+   const char* val = ::getenv(varname);
++#endif
+   if (val != nullptr) {
+     std::string err;
+     ABSL_INTERNAL_CHECK(absl::ParseFlag(val, &dflt, &err), err.c_str());
+diff --git a/absl/log/internal/log_message.cc b/absl/log/internal/log_message.cc
+index bdb10f2a..47611868 100644
+--- a/absl/log/internal/log_message.cc
++++ b/absl/log/internal/log_message.cc
+@@ -342,7 +342,11 @@ void LogMessage::FailQuietly() {
+   // of the program quickly, and it doesn't make much sense for FailQuietly to
+   // offer different guarantees about exit behavior than Fail does. (And as a
+   // consequence for QCHECK and CHECK to offer different exit behaviors)
++#if defined(__PROSPERO__)
++  exit(1);
++#else
+   _exit(1);
++#endif
+ }
+ 
+ LogMessage& LogMessage::operator<<(const std::string& v) {
 diff --git a/absl/time/internal/cctz/include/cctz/civil_time_detail.h b/absl/time/internal/cctz/include/cctz/civil_time_detail.h
 index a5b084e6..f7d11532 100644
 --- a/absl/time/internal/cctz/include/cctz/civil_time_detail.h
@@ -123,8 +476,39 @@ index a5b084e6..f7d11532 100644
    std::int_least64_t y;
    std::int_least8_t m;
    std::int_least8_t d;
+diff --git a/absl/time/internal/cctz/src/time_zone_format.cc b/absl/time/internal/cctz/src/time_zone_format.cc
+index 2e5f5329..66860499 100644
+--- a/absl/time/internal/cctz/src/time_zone_format.cc
++++ b/absl/time/internal/cctz/src/time_zone_format.cc
+@@ -13,7 +13,7 @@
+ //   limitations under the License.
+ 
+ #if !defined(HAS_STRPTIME)
+-#if !defined(_MSC_VER) && !defined(__MINGW32__)
++#if !defined(_MSC_VER) && !defined(__MINGW32__) && !defined(__PROSPERO__)
+ #define HAS_STRPTIME 1  // assume everyone has strptime() except windows
+ #endif
+ #endif
+@@ -40,7 +40,7 @@
+ #include <limits>
+ #include <string>
+ #include <vector>
+-#if !HAS_STRPTIME
++#if !defined(HAS_STRPTIME)
+ #include <iomanip>
+ #include <sstream>
+ #endif
+@@ -56,7 +56,7 @@ namespace detail {
+ 
+ namespace {
+ 
+-#if !HAS_STRPTIME
++#if !defined(HAS_STRPTIME)
+ // Build a strptime() using C++11's std::get_time().
+ char* strptime(const char* s, const char* fmt, std::tm* tm) {
+   std::istringstream input(s);
 diff --git a/absl/time/internal/cctz/src/time_zone_info.cc b/absl/time/internal/cctz/src/time_zone_info.cc
-index 787426f7..807028ee 100644
+index 787426f7..94ca79ac 100644
 --- a/absl/time/internal/cctz/src/time_zone_info.cc
 +++ b/absl/time/internal/cctz/src/time_zone_info.cc
 @@ -461,7 +461,7 @@ bool TimeZoneInfo::Load(ZoneInfoSource* zip) {
@@ -163,3 +547,91 @@ index 787426f7..807028ee 100644
    }
  
    // Compute the local civil time for each transition and the preceding
+@@ -657,7 +657,7 @@ std::unique_ptr<ZoneInfoSource> FileZoneInfoSource::Open(
+     char* tzdir_env = nullptr;
+ #if defined(_MSC_VER)
+     _dupenv_s(&tzdir_env, nullptr, "TZDIR");
+-#else
++#elif !defined(__PROSPERO__)
+     tzdir_env = std::getenv("TZDIR");
+ #endif
+     if (tzdir_env && *tzdir_env) tzdir = tzdir_env;
+diff --git a/absl/time/internal/cctz/src/time_zone_libc.cc b/absl/time/internal/cctz/src/time_zone_libc.cc
+index 887dd097..db0a693c 100644
+--- a/absl/time/internal/cctz/src/time_zone_libc.cc
++++ b/absl/time/internal/cctz/src/time_zone_libc.cc
+@@ -23,6 +23,10 @@
+ #include <limits>
+ #include <utility>
+ 
++#if defined(__PROSPERO__)
++#include <rtc.h>
++#endif
++
+ #include "absl/base/config.h"
+ #include "absl/time/internal/cctz/include/cctz/civil_time.h"
+ #include "absl/time/internal/cctz/include/cctz/time_zone.h"
+@@ -71,6 +75,23 @@ auto tm_zone(const std::tm& tm) -> decltype(tzname[0]) {
+   const bool is_dst = tm.tm_isdst > 0;
+   return tzname[is_dst];
+ }
++#elif defined(__PROSPERO__)
++int tm_gmtoff(const std::tm& /*tm*/) {
++  SceRtcTick utcTick;
++  sceRtcGetCurrentTickUtc(&utcTick);
++  SceRtcTick localTick;
++  sceRtcConvertUtcToLocalTime(&utcTick, &localTick);
++  int32_t timeZoneOffset =
++      (int32_t)(((int64_t)(utcTick.tick) - (int64_t)(localTick.tick)) /
++                1000000ll);
++  return timeZoneOffset;
++}
++
++const char* tm_zone(const std::tm& /*tm*/) {
++  // TODO: how to get playstation current local zone name?
++  static char local_zone_name[] = "LOCAL";
++  return local_zone_name;
++}
+ #else
+ // Adapt to different spellings of the struct std::tm extension fields.
+ #if defined(tm_gmtoff)
+@@ -112,6 +133,8 @@ auto tm_zone(const T& tm) -> decltype(tm.__tm_zone) {
+ inline std::tm* gm_time(const std::time_t* timep, std::tm* result) {
+ #if defined(_WIN32) || defined(_WIN64)
+   return gmtime_s(result, timep) ? nullptr : result;
++#elif defined(__PROSPERO__)
++  return gmtime_s(timep, result) ? nullptr : result;
+ #else
+   return gmtime_r(timep, result);
+ #endif
+@@ -120,6 +143,8 @@ inline std::tm* gm_time(const std::time_t* timep, std::tm* result) {
+ inline std::tm* local_time(const std::time_t* timep, std::tm* result) {
+ #if defined(_WIN32) || defined(_WIN64)
+   return localtime_s(result, timep) ? nullptr : result;
++#elif defined(__PROSPERO__)
++  return localtime_s(timep, result) ? nullptr : result;
+ #else
+   return localtime_r(timep, result);
+ #endif
+diff --git a/absl/time/internal/cctz/src/time_zone_lookup.cc b/absl/time/internal/cctz/src/time_zone_lookup.cc
+index f6983aeb..e7b52d7b 100644
+--- a/absl/time/internal/cctz/src/time_zone_lookup.cc
++++ b/absl/time/internal/cctz/src/time_zone_lookup.cc
+@@ -195,7 +195,7 @@ time_zone local_time_zone() {
+   char* tz_env = nullptr;
+ #if defined(_MSC_VER)
+   _dupenv_s(&tz_env, nullptr, "TZ");
+-#else
++#elif !defined(__PROSPERO__)
+   tz_env = std::getenv("TZ");
+ #endif
+   if (tz_env) zone = tz_env;
+@@ -210,7 +210,7 @@ time_zone local_time_zone() {
+ #if defined(_MSC_VER)
+     // System-specific default is just "localtime".
+     _dupenv_s(&localtime_env, nullptr, "LOCALTIME");
+-#else
++#elif !defined(__PROSPERO__)
+     zone = "/etc/localtime";  // System-specific default.
+     localtime_env = std::getenv("LOCALTIME");
+ #endif

@@ -84,3 +84,15 @@ cmake -G "Unix Makefiles" \
  $TL_LIBRARIES_PATH/Source/abseil/abseil-20230125
 cmake --build . --target install --config Release
 ```
+### 6.PlayStation 5
+```
+mkdir %TL_LIBRARIES_PATH%\_build\ps5\abseil & cd %TL_LIBRARIES_PATH%\_build\ps5\abseil
+"%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5CMake.bat" -G "Visual Studio 16 2019" ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/abseil ^
+ -DCMAKE_INSTALL_LIBDIR="lib/ps5/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DCMAKE_INSTALL_CMAKEDIR=lib/ps5/cmake -DCMAKE_CXX_STANDARD=14 ^
+ -DBUILD_TESTING=False -DABSL_PROPAGATE_CXX_STD=True ^
+ %TL_LIBRARIES_PATH%/Source/abseil/abseil-20230125
+cmake --build . --target INSTALL --config Debug
+cmake --build . --target INSTALL --config Release
+```
