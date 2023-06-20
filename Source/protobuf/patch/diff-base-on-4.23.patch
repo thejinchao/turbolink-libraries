@@ -1,8 +1,19 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index dc09f63db..ad4b6f6f1 100644
+index dc09f63db..1447556b4 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -320,6 +320,11 @@ else (MSVC)
+@@ -166,7 +166,9 @@ else()
+ endif()
+ file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmaketest.map)
+ 
+-find_package(Threads REQUIRED)
++if(NOT __COMPILER_PS5)
++  find_package(Threads REQUIRED)
++endif()
+ 
+ # We can install dependencies from submodules if we're running
+ # CMake v3.13 or newer.
+@@ -320,6 +322,11 @@ else (MSVC)
    set(LIB_PREFIX)
  endif (MSVC)
  
@@ -30,6 +41,25 @@ index e7eb2103b..ed8998b11 100644
  endforeach()
  
  if (protobuf_BUILD_PROTOC_BINARIES)
+diff --git a/src/google/protobuf/compiler/importer.cc b/src/google/protobuf/compiler/importer.cc
+index 338ceb078..df329e59c 100644
+--- a/src/google/protobuf/compiler/importer.cc
++++ b/src/google/protobuf/compiler/importer.cc
+@@ -416,9 +416,11 @@ DiskSourceTree::DiskFileToVirtualFile(absl::string_view disk_file,
+   for (int i = 0; i < mapping_index; i++) {
+     if (ApplyMapping(*virtual_file, mappings_[i].virtual_path,
+                      mappings_[i].disk_path, shadowing_disk_file)) {
+-      if (access(shadowing_disk_file->c_str(), F_OK) >= 0) {
+-        // File exists.
+-        return SHADOWED;
++        FILE* fp = fopen(shadowing_disk_file->c_str(), "r");
++        if (fp != nullptr) {
++            // File exists.
++            fclose(fp);
++            return SHADOWED;
+       }
+     }
+   }
 diff --git a/src/google/protobuf/generated_message_util.h b/src/google/protobuf/generated_message_util.h
 index 0493bccef..7f4c8fffc 100644
 --- a/src/google/protobuf/generated_message_util.h
@@ -52,6 +82,22 @@ index 0493bccef..7f4c8fffc 100644
    Scalar atom_;
  #else
    std::atomic<Scalar> atom_;
+diff --git a/src/google/protobuf/io/printer.cc b/src/google/protobuf/io/printer.cc
+index a13053207..f093440c7 100644
+--- a/src/google/protobuf/io/printer.cc
++++ b/src/google/protobuf/io/printer.cc
+@@ -279,7 +279,11 @@ Printer::Printer(ZeroCopyOutputStream* output, Options options)
+     // global, so that child processes can pick it up as well. The flag
+     // --enable_codegen_trace setenv()'s this in protoc's startup code.
+     static const bool kEnableCodegenTrace =
++#if defined(__PROSPERO__)
++        false;
++#else
+         ::getenv(kProtocCodegenTrace.data()) != nullptr;
++#endif
+     options_.enable_codegen_trace = kEnableCodegenTrace;
+   }
+ }
 diff --git a/src/google/protobuf/port_def.inc b/src/google/protobuf/port_def.inc
 index 644bb87e0..07c49c869 100644
 --- a/src/google/protobuf/port_def.inc
@@ -88,10 +134,22 @@ index 057565a41..5a87e6d9c 100644
  #else
    using Buffer = uint64_t;
 diff --git a/src/google/protobuf/stubs/port.h b/src/google/protobuf/stubs/port.h
-index e1c920185..020b9dc16 100644
+index e1c920185..f399fe69c 100644
 --- a/src/google/protobuf/stubs/port.h
 +++ b/src/google/protobuf/stubs/port.h
-@@ -86,8 +86,13 @@
+@@ -62,7 +62,11 @@
+ #if (defined(__APPLE__) || defined(__NEWLIB__))
+ #include <machine/endian.h>  // __BYTE_ORDER
+ #elif defined(__FreeBSD__)
++#if defined(__PROSPERO__)
++#include <machine/endian.h>  // __BYTE_ORDER
++#else
+ #include <sys/endian.h>  // __BYTE_ORDER
++#endif
+ #elif (defined(sun) || defined(__sun)) && (defined(__SVR4) || defined(__svr4__))
+ #include <sys/isa_defs.h>  // __BYTE_ORDER
+ #elif defined(_AIX) || defined(__TOS_AIX__)
+@@ -86,8 +90,13 @@
  #include <intrin.h>
  #elif defined(__APPLE__)
  #include <libkern/OSByteOrder.h>

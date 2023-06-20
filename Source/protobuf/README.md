@@ -99,3 +99,19 @@ cmake -G "Unix Makefiles" \
  $TL_LIBRARIES_PATH/Source/protobuf/protobuf-4.23.x
 cmake --build . --target install --config Release
 ```
+### 6. PlayStation 5
+```
+mkdir %TL_LIBRARIES_PATH%\_build\ps5\protobuf & cd %TL_LIBRARIES_PATH%\_build\ps5\protobuf
+"%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5CMake.bat" -G "Visual Studio 16 2019" ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/protobuf ^
+ -DCMAKE_INSTALL_LIBDIR="lib/ps5/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DCMAKE_INSTALL_CMAKEDIR=lib/ps5/cmake -DCMAKE_CXX_STANDARD=14 ^
+ -Dprotobuf_ABSL_PROVIDER=package -Dabsl_DIR="%TL_LIBRARIES_PATH%/output/abseil/lib/ps5/cmake" ^
+ -Dprotobuf_BUILD_TESTS=false -Dprotobuf_WITH_ZLIB=false ^
+ -Dprotobuf_BUILD_EXAMPLES=false ^
+ -Dprotobuf_BUILD_PROTOC_BINARIES=false -Dprotobuf_BUILD_LIBPROTOC=false ^
+ -Dprotobuf_DISABLE_RTTI=true ^
+ %TL_LIBRARIES_PATH%/Source/protobuf/protobuf-4.23.x
+cmake --build . --target INSTALL --config Debug
+cmake --build . --target INSTALL --config Release
+```
