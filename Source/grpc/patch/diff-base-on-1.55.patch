@@ -265,6 +265,401 @@ index 8b289a0aab..e58630c952 100644
  endif()
  
  include(CMakePackageConfigHelpers)
+diff --git a/include/grpc/event_engine/port.h b/include/grpc/event_engine/port.h
+index 3055a667e0..613f8920c5 100644
+--- a/include/grpc/event_engine/port.h
++++ b/include/grpc/event_engine/port.h
+@@ -20,10 +20,12 @@
+ #if defined(GPR_ANDROID) || defined(GPR_LINUX) || defined(GPR_APPLE) ||     \
+     defined(GPR_FREEBSD) || defined(GPR_OPENBSD) || defined(GPR_SOLARIS) || \
+     defined(GPR_AIX) || defined(GPR_NACL) || defined(GPR_FUCHSIA) ||        \
+-    defined(GRPC_POSIX_SOCKET) || defined(GPR_NETBSD)
++    defined(GRPC_POSIX_SOCKET) || defined(GPR_NETBSD) || defined(GPR_PLAYSTATION)
+ #define GRPC_EVENT_ENGINE_POSIX
+ #include <arpa/inet.h>
++#if !defined(GPR_PLAYSTATION)
+ #include <netdb.h>
++#endif
+ #include <netinet/in.h>
+ #include <sys/socket.h>
+ #include <unistd.h>
+diff --git a/include/grpc/support/port_platform.h b/include/grpc/support/port_platform.h
+index 1e99dc628e..4d0565a69f 100644
+--- a/include/grpc/support/port_platform.h
++++ b/include/grpc/support/port_platform.h
+@@ -252,6 +252,29 @@
+ #else /* _LP64 */
+ #define GPR_ARCH_32 1
+ #endif /* _LP64 */
++#elif defined(__PROSPERO__)
++#define GPR_PLATFORM_STRING "playstation"
++#ifndef _BSD_SOURCE
++#define _BSD_SOURCE
++#endif
++#define GPR_PLAYSTATION 1
++#define GPR_CPU_POSIX 1
++#define GPR_GCC_ATOMIC 1
++#define GPR_POSIX_LOG 1
++#define GPR_POSIX_ENV 1
++#define GPR_POSIX_TMPFILE 1
++#define GPR_POSIX_STAT 1
++#define GPR_POSIX_STRING 1
++#define GPR_POSIX_SUBPROCESS 1
++#define GPR_POSIX_SYNC 1
++#define GPR_POSIX_TIME 1
++#define GPR_HAS_PTHREAD_H 1
++#define GPR_GETPID_IN_UNISTD_H 1
++//#define GPR_SUPPORT_CHANNELS_FROM_FD 1
++#define GPR_ARCH_64 1
++#include <net.h>
++#include <netinet/in.h>
++#include <netinet6/in6.h>
+ #elif defined(__FreeBSD__)
+ #define GPR_PLATFORM_STRING "freebsd"
+ #ifndef _BSD_SOURCE
+diff --git a/src/core/lib/event_engine/posix_engine/ev_epoll1_linux.cc b/src/core/lib/event_engine/posix_engine/ev_epoll1_linux.cc
+index 0d11722942..146640fcf5 100644
+--- a/src/core/lib/event_engine/posix_engine/ev_epoll1_linux.cc
++++ b/src/core/lib/event_engine/posix_engine/ev_epoll1_linux.cc
+@@ -40,7 +40,9 @@
+ #ifdef GRPC_LINUX_EPOLL
+ #include <errno.h>
+ #include <limits.h>
++#if !defined(GPR_PLAYSTATION)
+ #include <sys/epoll.h>
++#endif
+ #include <sys/socket.h>
+ #include <unistd.h>
+ 
+@@ -167,13 +169,19 @@ int EpollCreateAndCloexec() {
+   if (fd < 0) {
+     gpr_log(GPR_ERROR, "epoll_create1 unavailable");
+   }
++#else
++#if defined(GPR_PLAYSTATION)
++  SceNetId fd = sceNetEpollCreate("turbolink", 0);
+ #else
+   int fd = epoll_create(MAX_EPOLL_EVENTS);
++#endif
+   if (fd < 0) {
+     gpr_log(GPR_ERROR, "epoll_create unavailable");
++#if !defined(GPR_PLAYSTATION)
+   } else if (fcntl(fd, F_SETFD, FD_CLOEXEC) != 0) {
+     gpr_log(GPR_ERROR, "fcntl following epoll_create failed");
+     return -1;
++#endif
+   }
+ #endif
+   return fd;
+diff --git a/src/core/lib/event_engine/posix_engine/ev_epoll1_linux.h b/src/core/lib/event_engine/posix_engine/ev_epoll1_linux.h
+index 207e13b767..cadade1cd3 100644
+--- a/src/core/lib/event_engine/posix_engine/ev_epoll1_linux.h
++++ b/src/core/lib/event_engine/posix_engine/ev_epoll1_linux.h
+@@ -36,8 +36,24 @@
+ #include "src/core/lib/iomgr/port.h"
+ 
+ #ifdef GRPC_LINUX_EPOLL
++#if defined(GPR_PLAYSTATION)
++#include <net.h>
++#define EPOLLIN SCE_NET_EPOLLIN
++#define EPOLLOUT SCE_NET_EPOLLOUT
++#define EPOLLERR SCE_NET_EPOLLERR
++#define EPOLLHUP SCE_NET_EPOLLHUP
++#define EPOLLET 0
++#define EPOLLPRI 0
++#define EPOLL_CTL_ADD SCE_NET_EPOLL_CTL_ADD
++#define EPOLL_CTL_DEL SCE_NET_EPOLL_CTL_DEL
++#define EPOLLDESCID SCE_NET_EPOLLDESCID
++#define epoll_event SceNetEpollEvent
++#define epoll_ctl sceNetEpollControl
++#define epoll_wait sceNetEpollWait
++#else
+ #include <sys/epoll.h>
+ #endif
++#endif
+ 
+ #define MAX_EPOLL_EVENTS 100
+ 
+diff --git a/src/core/lib/event_engine/posix_engine/internal_errqueue.cc b/src/core/lib/event_engine/posix_engine/internal_errqueue.cc
+index 81114f0852..963227a2d5 100644
+--- a/src/core/lib/event_engine/posix_engine/internal_errqueue.cc
++++ b/src/core/lib/event_engine/posix_engine/internal_errqueue.cc
+@@ -28,7 +28,9 @@
+ #include <netinet/in.h>
+ #include <stdlib.h>
+ #include <string.h>
++#if !defined(GPR_PLAYSTATION)
+ #include <sys/utsname.h>
++#endif
+ 
+ #include <cstddef>
+ 
+diff --git a/src/core/lib/event_engine/posix_engine/posix_engine_listener_utils.cc b/src/core/lib/event_engine/posix_engine/posix_engine_listener_utils.cc
+index 8daabdb9a2..f35a062725 100644
+--- a/src/core/lib/event_engine/posix_engine/posix_engine_listener_utils.cc
++++ b/src/core/lib/event_engine/posix_engine/posix_engine_listener_utils.cc
+@@ -40,7 +40,9 @@
+ 
+ #ifdef GRPC_POSIX_SOCKET_UTILS_COMMON
+ #include <errno.h>       // IWYU pragma: keep
+-#include <ifaddrs.h>     // IWYU pragma: keep
++#ifdef GRPC_HAVE_IFADDRS
++#include <ifaddrs.h>  // IWYU pragma: keep
++#endif
+ #include <netinet/in.h>  // IWYU pragma: keep
+ #include <sys/socket.h>  // IWYU pragma: keep
+ #include <unistd.h>      // IWYU pragma: keep
+@@ -101,6 +103,9 @@ bool SystemHasIfAddrs() { return false; }
+ 
+ // get max listen queue size on linux
+ int InitMaxAcceptQueueSize() {
++#if defined(GPR_PLAYSTATION)
++  return 16;
++#else
+   int n = SOMAXCONN;
+   char buf[64];
+   FILE* fp = fopen("/proc/sys/net/core/somaxconn", "r");
+@@ -126,6 +131,7 @@ int InitMaxAcceptQueueSize() {
+             max_accept_queue_size);
+   }
+   return max_accept_queue_size;
++#endif
+ }
+ 
+ int GetMaxAcceptQueueSize() {
+diff --git a/src/core/lib/event_engine/posix_engine/wakeup_fd_pipe.cc b/src/core/lib/event_engine/posix_engine/wakeup_fd_pipe.cc
+index 8901bf570a..2046983cd7 100644
+--- a/src/core/lib/event_engine/posix_engine/wakeup_fd_pipe.cc
++++ b/src/core/lib/event_engine/posix_engine/wakeup_fd_pipe.cc
+@@ -28,6 +28,11 @@
+ #include <fcntl.h>
+ #include <unistd.h>
+ 
++#if defined(GPR_PLAYSTATION)
++#include <kernel.h>
++#include <sys/socket.h>
++#endif
++
+ #include "src/core/lib/event_engine/posix_engine/wakeup_fd_posix.h"
+ #endif
+ 
+@@ -41,7 +46,74 @@ namespace experimental {
+ 
+ namespace {
+ 
++#if defined(GPR_PLAYSTATION)
++int playstation_create_pipe(int pipefd[2]) {
++  //
++  // https://trac.transmissionbt.com/browser/trunk/libtransmission/trevent.c
++  //
++  pipefd[0] = pipefd[1] = -1;
++
++  SceNetId s = sceNetSocket("pipe", AF_INET, SOCK_STREAM, IPPROTO_TCP);
++  if (s < 0) {
++    return sce_net_errno;
++  }
++
++  SceNetSockaddrIn serv_addr;
++  memset(&serv_addr, 0, sizeof(serv_addr));
++  serv_addr.sin_len = sizeof(serv_addr);
++  serv_addr.sin_family = SCE_NET_AF_INET;
++  serv_addr.sin_port = sceNetHtons(0);
++  serv_addr.sin_addr.s_addr = sceNetHtonl(INADDR_LOOPBACK);
++
++  for (;;) {
++    if (0 != sceNetBind(s, (SceNetSockaddr*)&serv_addr, sizeof(serv_addr)))
++      break;
++    if (0 != sceNetListen(s, 8)) break;
++
++    SceNetSocklen_t server_addr_len = sizeof(serv_addr);
++    if (0 !=
++        sceNetGetsockname(s, (SceNetSockaddr*)&serv_addr, &server_addr_len))
++      break;
++
++    pipefd[1] = sceNetSocket("pipe_1", AF_INET, SOCK_STREAM, IPPROTO_TCP);
++    if (pipefd[1] < 0) break;
++
++    // if (GRPC_ERROR_NONE != grpc_set_socket_nonblocking(pipefd[1], 1)) break;
++
++    if (0 != sceNetConnect(pipefd[1], (SceNetSockaddr*)&serv_addr,
++                           sizeof(serv_addr)))
++      break;
++
++    SceNetSockaddrIn sin_accept;
++    SceNetSocklen_t sin_len = sizeof(sin_accept);
++    pipefd[0] = sceNetAccept(s, (SceNetSockaddr*)&sin_accept, &sin_len);
++    if (pipefd[0] < 0) break;
++
++    // if (GRPC_ERROR_NONE != grpc_set_socket_nonblocking(pipefd[0], 1)) break;
++
++    sceNetSocketClose(s);
++    return 0;
++  }
++  int error_code = sce_net_errno;
++  // error case
++  if (pipefd[0] != -1) sceNetSocketClose(pipefd[0]);
++  if (pipefd[1] != -1) sceNetSocketClose(pipefd[1]);
++  sceNetSocketClose(s);
++  pipefd[0] = pipefd[1] = -1;
++  return error_code;
++}
++#endif
++
+ absl::Status SetSocketNonBlocking(int fd) {
++#if defined(GPR_PLAYSTATION)
++  int non_blocking = 1;
++  int ret = sceNetSetsockopt(fd, SCE_NET_SOL_SOCKET, SCE_NET_SO_NBIO,
++                             &non_blocking, sizeof(non_blocking));
++  if (ret < 0) {
++    return absl::Status(absl::StatusCode::kInternal,
++        absl::StrCat("sceNetSetsockopt(SO_NBIO) ", grpc_core::StrError(sce_net_errno)));
++  }
++#else
+   int oldflags = fcntl(fd, F_GETFL, 0);
+   if (oldflags < 0) {
+     return absl::Status(absl::StatusCode::kInternal,
+@@ -54,14 +126,18 @@ absl::Status SetSocketNonBlocking(int fd) {
+     return absl::Status(absl::StatusCode::kInternal,
+                         absl::StrCat("fcntl: ", grpc_core::StrError(errno)));
+   }
+-
++#endif
+   return absl::OkStatus();
+ }
+ }  // namespace
+ 
+ absl::Status PipeWakeupFd::Init() {
+   int pipefd[2];
++#if defined(GPR_PLAYSTATION)
++  int r = playstation_create_pipe(pipefd);
++#else
+   int r = pipe(pipefd);
++#endif
+   if (0 != r) {
+     return absl::Status(absl::StatusCode::kInternal,
+                         absl::StrCat("pipe: ", grpc_core::StrError(errno)));
+diff --git a/src/core/lib/gpr/posix/cpu.cc b/src/core/lib/gpr/posix/cpu.cc
+index 4b58d869f6..462571ec51 100644
+--- a/src/core/lib/gpr/posix/cpu.cc
++++ b/src/core/lib/gpr/posix/cpu.cc
+@@ -37,11 +37,15 @@ static long ncpus = 0;
+ static pthread_key_t thread_id_key;
+ 
+ static void init_ncpus() {
++#if defined(GPR_PLAYSTATION)
++  ncpus = 16;
++#else
+   ncpus = sysconf(_SC_NPROCESSORS_CONF);
+   if (ncpus < 1 || ncpus > INT32_MAX) {
+     gpr_log(GPR_ERROR, "Cannot determine number of CPUs: assuming 1");
+     ncpus = 1;
+   }
++#endif
+ }
+ 
+ unsigned gpr_cpu_num_cores(void) {
+diff --git a/src/core/lib/gpr/posix/log.cc b/src/core/lib/gpr/posix/log.cc
+index 1808848611..d4185e81e2 100644
+--- a/src/core/lib/gpr/posix/log.cc
++++ b/src/core/lib/gpr/posix/log.cc
+@@ -85,7 +85,11 @@ void gpr_default_log(gpr_log_func_args* args) {
+   else
+     display_file = final_slash + 1;
+ 
++#if defined(GPR_PLAYSTATION)
++  if (!localtime_s(&timer, &tm)) {
++#else
+   if (!localtime_r(&timer, &tm)) {
++#endif
+     strcpy(time_buffer, "error:localtime");
+   } else if (0 ==
+              strftime(time_buffer, sizeof(time_buffer), "%m%d %H:%M:%S", &tm)) {
+diff --git a/src/core/lib/gpr/posix/tmpfile.cc b/src/core/lib/gpr/posix/tmpfile.cc
+index 4d838af72b..a09fa5ca3c 100644
+--- a/src/core/lib/gpr/posix/tmpfile.cc
++++ b/src/core/lib/gpr/posix/tmpfile.cc
+@@ -34,6 +34,7 @@
+ #include "src/core/lib/gprpp/crash.h"
+ #include "src/core/lib/gprpp/strerror.h"
+ 
++#if !defined(GPR_PLAYSTATION)
+ FILE* gpr_tmpfile(const char* prefix, char** tmp_filename) {
+   FILE* result = nullptr;
+   char* filename_template;
+@@ -67,5 +68,6 @@ end:
+   }
+   return result;
+ }
++#endif
+ 
+ #endif  // GPR_POSIX_TMPFILE
+diff --git a/src/core/lib/gprpp/posix/env.cc b/src/core/lib/gprpp/posix/env.cc
+index 4121e24c07..4bf9565bec 100644
+--- a/src/core/lib/gprpp/posix/env.cc
++++ b/src/core/lib/gprpp/posix/env.cc
+@@ -27,19 +27,33 @@
+ namespace grpc_core {
+ 
+ absl::optional<std::string> GetEnv(const char* name) {
++#if defined(GPR_PLAYSTATION)
++  (void)name;
++  return absl::nullopt;
++#else
+   char* result = getenv(name);
+   if (result == nullptr) return absl::nullopt;
+   return result;
++#endif
+ }
+ 
+ void SetEnv(const char* name, const char* value) {
++#if defined(GPR_PLAYSTATION)
++  (void)name;
++  (void)value;
++#else
+   int res = setenv(name, value, 1);
+   if (res != 0) abort();
++#endif
+ }
+ 
+ void UnsetEnv(const char* name) {
++#if defined(GPR_PLAYSTATION)
++  (void)name;
++#else
+   int res = unsetenv(name);
+   if (res != 0) abort();
++#endif
+ }
+ 
+ }  // namespace grpc_core
+diff --git a/src/core/lib/gprpp/posix/thd.cc b/src/core/lib/gprpp/posix/thd.cc
+index e33198a9ad..178c6b45f6 100644
+--- a/src/core/lib/gprpp/posix/thd.cc
++++ b/src/core/lib/gprpp/posix/thd.cc
+@@ -55,16 +55,24 @@ struct thd_arg {
+ };
+ 
+ size_t RoundUpToPageSize(size_t size) {
++#if defined(GPR_PLAYSTATION)
++  size_t page_size = static_cast<size_t>(SCE_KERNEL_PAGE_SIZE);
++#else
+   // TODO(yunjiaw): Change this variable (page_size) to a function-level static
+   // when possible
+   size_t page_size = static_cast<size_t>(sysconf(_SC_PAGESIZE));
++#endif
+   return (size + page_size - 1) & ~(page_size - 1);
+ }
+ 
+ // Returns the minimum valid stack size that can be passed to
+ // pthread_attr_setstacksize.
+ size_t MinValidStackSize(size_t request_size) {
++#if defined(GPR_PLAYSTATION)
++  size_t min_stacksize = SCE_PTHREAD_STACK_MIN;
++#else
+   size_t min_stacksize = sysconf(_SC_THREAD_STACK_MIN);
++#endif
+   if (request_size < min_stacksize) {
+     request_size = min_stacksize;
+   }
 diff --git a/src/core/lib/gprpp/time.h b/src/core/lib/gprpp/time.h
 index 557139eb46..f1715b5aab 100644
 --- a/src/core/lib/gprpp/time.h
@@ -280,6 +675,510 @@ index 557139eb46..f1715b5aab 100644
  }
  
  inline Duration operator*(Duration lhs, double rhs) {
+diff --git a/src/core/lib/iomgr/ev_epoll1_linux.cc b/src/core/lib/iomgr/ev_epoll1_linux.cc
+index 83b379552a..c8e0bbee30 100644
+--- a/src/core/lib/iomgr/ev_epoll1_linux.cc
++++ b/src/core/lib/iomgr/ev_epoll1_linux.cc
+@@ -30,10 +30,28 @@
+ #include <errno.h>
+ #include <fcntl.h>
+ #include <limits.h>
++#if !defined(GPR_PLAYSTATION)
+ #include <poll.h>
++#endif
+ #include <pthread.h>
+ #include <string.h>
++#if defined(GPR_PLAYSTATION)
++#include <net.h>
++#define EPOLLIN SCE_NET_EPOLLIN
++#define EPOLLOUT SCE_NET_EPOLLOUT
++#define EPOLLERR SCE_NET_EPOLLERR
++#define EPOLLHUP SCE_NET_EPOLLHUP
++#define EPOLLET 0
++#define EPOLLPRI 0
++#define EPOLL_CTL_ADD SCE_NET_EPOLL_CTL_ADD
++#define EPOLL_CTL_DEL SCE_NET_EPOLL_CTL_DEL
++#define EPOLLDESCID SCE_NET_EPOLLDESCID
++#define epoll_event SceNetEpollEvent
++#define epoll_ctl sceNetEpollControl
++#define epoll_wait sceNetEpollWait
++#else
+ #include <sys/epoll.h>
++#endif
+ #include <sys/socket.h>
+ #include <unistd.h>
+ 
+@@ -100,13 +118,19 @@ static int epoll_create_and_cloexec() {
+   if (fd < 0) {
+     gpr_log(GPR_ERROR, "epoll_create1 unavailable");
+   }
++#else
++#if defined(GPR_PLAYSTATION)
++  SceNetId fd = sceNetEpollCreate("turbolink", 0);
+ #else
+   int fd = epoll_create(MAX_EPOLL_EVENTS);
++#endif
+   if (fd < 0) {
+     gpr_log(GPR_ERROR, "epoll_create unavailable");
++#if !defined(GPR_PLAYSTATION)
+   } else if (fcntl(fd, F_SETFD, FD_CLOEXEC) != 0) {
+     gpr_log(GPR_ERROR, "fcntl following epoll_create failed");
+     return -1;
++#endif
+   }
+ #endif
+   return fd;
+diff --git a/src/core/lib/iomgr/ev_posix.cc b/src/core/lib/iomgr/ev_posix.cc
+index 1c1ca9dc55..c8f259a209 100644
+--- a/src/core/lib/iomgr/ev_posix.cc
++++ b/src/core/lib/iomgr/ev_posix.cc
+@@ -60,6 +60,7 @@ grpc_core::DebugOnlyTraceFlag grpc_polling_api_trace(false, "polling_api");
+ #define GRPC_POLLING_API_TRACE(...)
+ #endif  // NDEBUG
+ 
++#if !defined(GPR_PLAYSTATION)
+ /// Default poll() function - a pointer so that it can be overridden by some
+ /// tests
+ #ifndef GPR_AIX
+@@ -70,6 +71,7 @@ int aix_poll(struct pollfd fds[], nfds_t nfds, int timeout) {
+ }
+ grpc_poll_function_type grpc_poll_function = aix_poll;
+ #endif  // GPR_AIX
++#endif
+ 
+ grpc_wakeup_fd grpc_global_wakeup_fd;
+ 
+@@ -93,8 +95,13 @@ static const grpc_event_engine_vtable* g_vtables[] = {
+     nullptr,
+     nullptr,
+     &grpc_ev_epoll1_posix,
++#if defined(__PROSPERO__)
++    nullptr,
++    nullptr,
++#else
+     &grpc_ev_poll_posix,
+     &grpc_ev_none_posix,
++#endif
+     nullptr,
+     nullptr,
+     nullptr,
+diff --git a/src/core/lib/iomgr/ev_posix.h b/src/core/lib/iomgr/ev_posix.h
+index d7d84879f4..32f851e9c4 100644
+--- a/src/core/lib/iomgr/ev_posix.h
++++ b/src/core/lib/iomgr/ev_posix.h
+@@ -21,7 +21,9 @@
+ 
+ #include <grpc/support/port_platform.h>
+ 
++#if !defined(GPR_PLAYSTATION)
+ #include <poll.h>
++#endif
+ 
+ #include "src/core/lib/debug/trace.h"
+ #include "src/core/lib/iomgr/exec_ctx.h"
+@@ -203,8 +205,10 @@ bool grpc_add_closure_to_background_poller(grpc_closure* closure,
+ // Shut down all the closures registered in the background poller.
+ void grpc_shutdown_background_closure();
+ 
++#if !defined(GPR_PLAYSTATION)
+ // override to allow tests to hook poll() usage
+ typedef int (*grpc_poll_function_type)(struct pollfd*, nfds_t, int);
+ extern grpc_poll_function_type grpc_poll_function;
++#endif
+ 
+ #endif  // GRPC_SRC_CORE_LIB_IOMGR_EV_POSIX_H
+diff --git a/src/core/lib/iomgr/internal_errqueue.cc b/src/core/lib/iomgr/internal_errqueue.cc
+index d294a4f105..d869ce5210 100644
+--- a/src/core/lib/iomgr/internal_errqueue.cc
++++ b/src/core/lib/iomgr/internal_errqueue.cc
+@@ -25,7 +25,9 @@
+ #include <errno.h>
+ #include <stdlib.h>
+ #include <string.h>
++#if !defined(GPR_PLAYSTATION)
+ #include <sys/utsname.h>
++#endif
+ 
+ #include "src/core/lib/gprpp/strerror.h"
+ 
+diff --git a/src/core/lib/iomgr/port.h b/src/core/lib/iomgr/port.h
+index 846c3764de..3ba3c111e0 100644
+--- a/src/core/lib/iomgr/port.h
++++ b/src/core/lib/iomgr/port.h
+@@ -125,6 +125,13 @@
+ #define GRPC_POSIX_SOCKETUTILS 1
+ #define GRPC_POSIX_SYSCONF 1
+ #define GRPC_POSIX_WAKEUP_FD 1
++#elif defined(GPR_PLAYSTATION)
++#define GRPC_HAVE_ARPA_NAMESER 1
++#define GRPC_POSIX_NO_SPECIAL_WAKEUP_FD 1
++#define GRPC_POSIX_SOCKET 1
++#define GRPC_POSIX_SOCKETUTILS 1
++#define GRPC_POSIX_WAKEUP_FD 1
++#define GRPC_LINUX_EPOLL 1
+ #elif defined(GPR_FREEBSD)
+ #define GRPC_HAVE_ARPA_NAMESER 1
+ #define GRPC_HAVE_IFADDRS 1
+@@ -228,6 +235,13 @@
+ #define GRPC_POSIX_SOCKET_UTILS_COMMON 1
+ #endif
+ 
++#ifdef GPR_PLAYSTATION
++#undef GRPC_POSIX_SOCKET_EV_EPOLLEX
++#undef GRPC_POSIX_SOCKET_EV_POLL
++#undef GRPC_POSIX_SOCKET_EV_EPOLL1
++#undef GRPC_POSIX_SOCKET_IF_NAMETOINDEX
++#endif
++
+ #if defined(GRPC_POSIX_HOST_NAME_MAX) && defined(GRPC_POSIX_SYSCONF)
+ #error "Cannot define both GRPC_POSIX_HOST_NAME_MAX and GRPC_POSIX_SYSCONF"
+ #endif
+diff --git a/src/core/lib/iomgr/resolve_address_posix.cc b/src/core/lib/iomgr/resolve_address_posix.cc
+index ee5f9092b9..53ce673140 100644
+--- a/src/core/lib/iomgr/resolve_address_posix.cc
++++ b/src/core/lib/iomgr/resolve_address_posix.cc
+@@ -91,14 +91,54 @@ DNSResolver::TaskHandle NativeDNSResolver::LookupHostname(
+   return kNullHandle;
+ }
+ 
++#if defined(GPR_PLAYSTATION)
++grpc_error_handle playstation_do_resolver_ntoa(const char* hostname, SceNetInAddr* addr) 
++{
++  SceNetId rid = -1;
++  int memid = -1;
++  int ret;
++  grpc_error_handle err = absl::OkStatus();
++
++  ret = sceNetPoolCreate(__FUNCTION__, 4 * 1024, 0);
++  if (ret < 0) {
++    err = grpc_error_set_int(GRPC_ERROR_CREATE("sceNetPoolCreate() failed"), StatusIntProperty::kErrorNo, sce_net_errno);
++    goto failed;
++  }
++  memid = ret;
++  ret = sceNetResolverCreate("resolver", memid, 0);
++  if (ret < 0) {
++    err = grpc_error_set_int(GRPC_ERROR_CREATE("sceNetResolverCreate() failed"), StatusIntProperty::kErrorNo, sce_net_errno);
++    goto failed;
++  }
++  rid = ret;
++  ret = sceNetResolverStartNtoa(rid, hostname, addr, 0, 0, 0);
++  if (ret < 0) {
++    err = grpc_error_set_int(GRPC_ERROR_CREATE("sceNetResolverStartNtoa() failed"), StatusIntProperty::kErrorNo, sce_net_errno);
++    goto failed;
++  }
++  ret = sceNetResolverDestroy(rid);
++  if (ret < 0) {
++    err = grpc_error_set_int(GRPC_ERROR_CREATE("sceNetResolverDestroy() failed"), StatusIntProperty::kErrorNo, sce_net_errno);
++    goto failed;
++  }
++  ret = sceNetPoolDestroy(memid);
++  if (ret < 0) {
++    err = grpc_error_set_int(GRPC_ERROR_CREATE("sceNetPoolDestroy() failed"), StatusIntProperty::kErrorNo, sce_net_errno);
++    goto failed;
++  }
++  return err;
++
++failed:
++  sceNetResolverDestroy(rid);
++  sceNetPoolDestroy(memid);
++  return err;
++}
++#endif
++
+ absl::StatusOr<std::vector<grpc_resolved_address>>
+ NativeDNSResolver::LookupHostnameBlocking(absl::string_view name,
+                                           absl::string_view default_port) {
+   ExecCtx exec_ctx;
+-  struct addrinfo hints;
+-  struct addrinfo *result = nullptr, *resp;
+-  int s;
+-  size_t i;
+   grpc_error_handle err;
+   std::vector<grpc_resolved_address> addresses;
+   std::string host;
+@@ -108,16 +148,66 @@ NativeDNSResolver::LookupHostnameBlocking(absl::string_view name,
+   if (host.empty()) {
+     err = grpc_error_set_str(GRPC_ERROR_CREATE("unparseable host:port"),
+                              StatusStrProperty::kTargetAddress, name);
+-    goto done;
++
++    auto error_result = grpc_error_to_absl_status(err);
++    return error_result;
+   }
+   if (port.empty()) {
+     if (default_port.empty()) {
+       err = grpc_error_set_str(GRPC_ERROR_CREATE("no port in name"),
+                                StatusStrProperty::kTargetAddress, name);
+-      goto done;
++      auto error_result = grpc_error_to_absl_status(err);
++      return error_result;
+     }
+     port = std::string(default_port);
+   }
++#if defined(GPR_PLAYSTATION)
++  SceNetInAddr sin_addr;
++  if (sceNetInetPton(SCE_NET_AF_INET, host.c_str(), &sin_addr) == 0) {
++    GRPC_SCHEDULING_START_BLOCKING_REGION;
++    err = playstation_do_resolver_ntoa(host.c_str(), &sin_addr);
++    GRPC_SCHEDULING_END_BLOCKING_REGION;
++    if (!err.ok()) {
++      auto error_result = grpc_error_to_absl_status(err);
++      return error_result;
++    }
++  }
++
++  // parse port
++  char* endptr = nullptr;
++  int port_num = strtol(port.c_str(), &endptr, 10);
++  if (endptr == port.c_str()) {
++    if (port == "http") {
++      port_num = 80;
++    } else if (port == "https") {
++      port_num = 443;
++    } else {
++      err = grpc_error_set_str(GRPC_ERROR_CREATE("invalid port in name"),
++                               StatusStrProperty::kTargetAddress, name);
++      auto error_result = grpc_error_to_absl_status(err);
++      return error_result;
++    }
++  }
++
++  //struct sockaddr hints;
++  grpc_sockaddr_in result;
++  memset(&result, 0, sizeof(result));
++  result.sin_len = sizeof(result);
++  result.sin_family = SCE_NET_AF_INET;
++  result.sin_port = sceNetHtons(port_num);
++  result.sin_addr.s_addr = sin_addr.s_addr;
++
++  grpc_resolved_address addr;
++  memcpy(&addr.addr, &result, sizeof(result));
++  addr.len = sizeof(result);
++  addresses.push_back(addr);
++
++  return addresses;
++#else
++  struct addrinfo hints;
++  struct addrinfo *result = nullptr, *resp;
++  int s;
++  size_t i;
+   // Call getaddrinfo
+   memset(&hints, 0, sizeof(hints));
+   hints.ai_family = AF_UNSPEC;      // ipv4 or ipv6
+@@ -166,6 +256,7 @@ done:
+   }
+   auto error_result = grpc_error_to_absl_status(err);
+   return error_result;
++#endif
+ }
+ 
+ DNSResolver::TaskHandle NativeDNSResolver::LookupSRV(
+diff --git a/src/core/lib/iomgr/sockaddr_posix.h b/src/core/lib/iomgr/sockaddr_posix.h
+index f46072f8da..5dbd48a5a7 100644
+--- a/src/core/lib/iomgr/sockaddr_posix.h
++++ b/src/core/lib/iomgr/sockaddr_posix.h
+@@ -27,7 +27,9 @@
+ 
+ #ifdef GRPC_POSIX_SOCKET_SOCKADDR
+ #include <arpa/inet.h>
++#if !defined(GPR_PLAYSTATION)
+ #include <netdb.h>
++#endif
+ #include <netinet/in.h>
+ #include <sys/socket.h>
+ #include <sys/types.h>
+diff --git a/src/core/lib/iomgr/socket_utils_common_posix.cc b/src/core/lib/iomgr/socket_utils_common_posix.cc
+index 2f99d35d50..b1db9713b4 100644
+--- a/src/core/lib/iomgr/socket_utils_common_posix.cc
++++ b/src/core/lib/iomgr/socket_utils_common_posix.cc
+@@ -71,6 +71,13 @@ grpc_error_handle grpc_set_socket_zerocopy(int fd) {
+ 
+ // set a socket to non blocking mode
+ grpc_error_handle grpc_set_socket_nonblocking(int fd, int non_blocking) {
++#if defined(GPR_PLAYSTATION)
++  int ret = sceNetSetsockopt(fd, SCE_NET_SOL_SOCKET, SCE_NET_SO_NBIO,
++                             &non_blocking, sizeof(non_blocking));
++  if (ret < 0) {
++    return GRPC_OS_ERROR(sce_net_errno, "sceNetSetsockopt(SO_NBIO) failed");
++  }
++#else
+   int oldflags = fcntl(fd, F_GETFL, 0);
+   if (oldflags < 0) {
+     return GRPC_OS_ERROR(errno, "fcntl");
+@@ -85,7 +92,7 @@ grpc_error_handle grpc_set_socket_nonblocking(int fd, int non_blocking) {
+   if (fcntl(fd, F_SETFL, oldflags) != 0) {
+     return GRPC_OS_ERROR(errno, "fcntl");
+   }
+-
++#endif
+   return absl::OkStatus();
+ }
+ 
+@@ -152,6 +159,7 @@ grpc_error_handle grpc_set_socket_rcvbuf(int fd, int buffer_size_bytes) {
+ 
+ // set a socket to close on exec
+ grpc_error_handle grpc_set_socket_cloexec(int fd, int close_on_exec) {
++#if !defined(GPR_PLAYSTATION)
+   int oldflags = fcntl(fd, F_GETFD, 0);
+   if (oldflags < 0) {
+     return GRPC_OS_ERROR(errno, "fcntl");
+@@ -166,7 +174,7 @@ grpc_error_handle grpc_set_socket_cloexec(int fd, int close_on_exec) {
+   if (fcntl(fd, F_SETFD, oldflags) != 0) {
+     return GRPC_OS_ERROR(errno, "fcntl");
+   }
+-
++#endif
+   return absl::OkStatus();
+ }
+ 
+diff --git a/src/core/lib/iomgr/tcp_client_posix.cc b/src/core/lib/iomgr/tcp_client_posix.cc
+index 68918d3ce1..d2452dc855 100644
+--- a/src/core/lib/iomgr/tcp_client_posix.cc
++++ b/src/core/lib/iomgr/tcp_client_posix.cc
+@@ -333,6 +333,7 @@ int64_t grpc_tcp_client_create_from_prepared_fd(
+     err = connect(fd, reinterpret_cast<const grpc_sockaddr*>(addr->addr),
+                   addr->len);
+   } while (err < 0 && errno == EINTR);
++  int connect_errno = errno;
+ 
+   auto addr_uri = grpc_sockaddr_to_uri(addr);
+   if (!addr_uri.ok()) {
+@@ -344,7 +345,7 @@ int64_t grpc_tcp_client_create_from_prepared_fd(
+   std::string name = absl::StrCat("tcp-client:", addr_uri.value());
+   grpc_fd* fdobj = grpc_fd_create(fd, name.c_str(), true);
+   int64_t connection_id = 0;
+-  if (errno == EWOULDBLOCK || errno == EINPROGRESS) {
++  if (connect_errno == EWOULDBLOCK || connect_errno == EINPROGRESS) {
+     // Connection is still in progress.
+     connection_id = g_connection_id.fetch_add(1, std::memory_order_acq_rel);
+   }
+@@ -356,10 +357,10 @@ int64_t grpc_tcp_client_create_from_prepared_fd(
+     grpc_core::ExecCtx::Run(DEBUG_LOCATION, closure, absl::OkStatus());
+     return 0;
+   }
+-  if (errno != EWOULDBLOCK && errno != EINPROGRESS) {
++  if (connect_errno != EWOULDBLOCK && connect_errno != EINPROGRESS) {
+     // Connection already failed. Return 0 to discourage any cancellation
+     // attempts.
+-    grpc_error_handle error = GRPC_OS_ERROR(errno, "connect");
++    grpc_error_handle error = GRPC_OS_ERROR(connect_errno, "connect");
+     error = grpc_error_set_str(
+         error, grpc_core::StatusStrProperty::kTargetAddress, addr_uri.value());
+     grpc_fd_orphan(fdobj, nullptr, nullptr, "tcp_client_connect_error");
+diff --git a/src/core/lib/iomgr/tcp_server_utils_posix_common.cc b/src/core/lib/iomgr/tcp_server_utils_posix_common.cc
+index 574fd02d0d..51ef36588c 100644
+--- a/src/core/lib/iomgr/tcp_server_utils_posix_common.cc
++++ b/src/core/lib/iomgr/tcp_server_utils_posix_common.cc
+@@ -50,6 +50,9 @@ static int s_max_accept_queue_size;
+ 
+ // get max listen queue size on linux
+ static void init_max_accept_queue_size(void) {
++#if defined(GPR_PLAYSTATION)
++  s_max_accept_queue_size = 16;
++#else
+   int n = SOMAXCONN;
+   char buf[64];
+   FILE* fp = fopen("/proc/sys/net/core/somaxconn", "r");
+@@ -74,6 +77,7 @@ static void init_max_accept_queue_size(void) {
+             "connection drops",
+             s_max_accept_queue_size);
+   }
++#endif
+ }
+ 
+ static int get_max_accept_queue_size(void) {
+diff --git a/src/core/lib/iomgr/wakeup_fd_pipe.cc b/src/core/lib/iomgr/wakeup_fd_pipe.cc
+index a3936608cc..05b0f2d450 100644
+--- a/src/core/lib/iomgr/wakeup_fd_pipe.cc
++++ b/src/core/lib/iomgr/wakeup_fd_pipe.cc
+@@ -34,9 +34,73 @@
+ #include "src/core/lib/iomgr/wakeup_fd_pipe.h"
+ #include "src/core/lib/iomgr/wakeup_fd_posix.h"
+ 
++namespace {
++#if defined(GPR_PLAYSTATION)
++int playstation_create_pipe(int pipefd[2]) {
++  //
++  // https://trac.transmissionbt.com/browser/trunk/libtransmission/trevent.c
++  //
++  pipefd[0] = pipefd[1] = -1;
++
++  SceNetId s = sceNetSocket("pipe", AF_INET, SOCK_STREAM, IPPROTO_TCP);
++  if (s < 0) {
++    return sce_net_errno;
++  }
++
++  SceNetSockaddrIn serv_addr;
++  memset(&serv_addr, 0, sizeof(serv_addr));
++  serv_addr.sin_len = sizeof(serv_addr);
++  serv_addr.sin_family = SCE_NET_AF_INET;
++  serv_addr.sin_port = sceNetHtons(0);
++  serv_addr.sin_addr.s_addr = sceNetHtonl(INADDR_LOOPBACK);
++
++  for (;;) {
++    if (0 != sceNetBind(s, (SceNetSockaddr*)&serv_addr, sizeof(serv_addr)))
++      break;
++    if (0 != sceNetListen(s, 8)) break;
++
++    SceNetSocklen_t server_addr_len = sizeof(serv_addr);
++    if (0 !=
++        sceNetGetsockname(s, (SceNetSockaddr*)&serv_addr, &server_addr_len))
++      break;
++
++    pipefd[1] = sceNetSocket("pipe_1", AF_INET, SOCK_STREAM, IPPROTO_TCP);
++    if (pipefd[1] < 0) break;
++
++    // if (GRPC_ERROR_NONE != grpc_set_socket_nonblocking(pipefd[1], 1)) break;
++
++    if (0 != sceNetConnect(pipefd[1], (SceNetSockaddr*)&serv_addr,
++                           sizeof(serv_addr)))
++      break;
++
++    SceNetSockaddrIn sin_accept;
++    SceNetSocklen_t sin_len = sizeof(sin_accept);
++    pipefd[0] = sceNetAccept(s, (SceNetSockaddr*)&sin_accept, &sin_len);
++    if (pipefd[0] < 0) break;
++
++    // if (GRPC_ERROR_NONE != grpc_set_socket_nonblocking(pipefd[0], 1)) break;
++
++    sceNetSocketClose(s);
++    return 0;
++  }
++  int error_code = sce_net_errno;
++  // error case
++  if (pipefd[0] != -1) sceNetSocketClose(pipefd[0]);
++  if (pipefd[1] != -1) sceNetSocketClose(pipefd[1]);
++  sceNetSocketClose(s);
++  pipefd[0] = pipefd[1] = -1;
++  return error_code;
++}
++#endif
++}
++
+ static grpc_error_handle pipe_init(grpc_wakeup_fd* fd_info) {
+   int pipefd[2];
++#if defined(GPR_PLAYSTATION)
++  int r = playstation_create_pipe(pipefd);
++#else
+   int r = pipe(pipefd);
++#endif
+   if (0 != r) {
+     gpr_log(GPR_ERROR, "pipe creation failed (%d): %s", errno,
+             grpc_core::StrError(errno).c_str());
+diff --git a/third_party/address_sorting/address_sorting_internal.h b/third_party/address_sorting/address_sorting_internal.h
+index be59d44fee..2c21c03191 100644
+--- a/third_party/address_sorting/address_sorting_internal.h
++++ b/third_party/address_sorting/address_sorting_internal.h
+@@ -56,6 +56,9 @@
+ #endif
+ #include <arpa/inet.h>
+ #include <netinet/in.h>
++#if defined(__PROSPERO__)
++#include <netinet6/in6.h>
++#endif
+ #include <sys/socket.h>
+ #define ADDRESS_SORTING_POSIX 1
+ #endif
 diff --git a/third_party/upb/upb/collections/array_internal.h b/third_party/upb/upb/collections/array_internal.h
 index cb842f5c36..a23c7f666b 100644
 --- a/third_party/upb/upb/collections/array_internal.h

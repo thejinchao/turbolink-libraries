@@ -166,3 +166,33 @@ cmake -G "Unix Makefiles" \
  $TL_LIBRARIES_PATH/Source/grpc/grpc-1.55
 cmake --build . --target install --config Release
 ```
+### 3. Play Station 5
+```
+mkdir %TL_LIBRARIES_PATH%\_build\ps5\grpc & cd %TL_LIBRARIES_PATH%\_build\ps5\grpc
+"%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5CMake.bat" -G "Visual Studio 16 2019" ^
+ -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/grpc ^
+ -DgRPC_INSTALL_LIBDIR="lib/ps5/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DgRPC_INSTALL_CMAKEDIR=lib/ps5/cmake ^
+ -DgRPC_ABSL_PROVIDER=package -Dabsl_DIR="%TL_LIBRARIES_PATH%/output/abseil/lib/ps5/cmake" ^
+ -DgRPC_USE_CARES=OFF ^
+ -DgRPC_RE2_PROVIDER=package -Dre2_DIR="%TL_LIBRARIES_PATH%/output/re2/lib/ps5/cmake" ^
+ -DgRPC_PROTOBUF_PROVIDER=package ^
+ -DProtobuf_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/ps5/cmake" ^
+ -Dutf8_range_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/ps5/cmake" ^
+ -DgRPC_ZLIB_PROVIDER=package ^
+ -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/zlib-1.2.5/Inc" ^
+ -DZLIB_LIBRARY_RELEASE="%UE_PS5_THIRD_PARTY_PATH%/zlib/zlib-1.2.5/Lib/libz.a" ^
+ -DZLIB_LIBRARY_DEBUG="%UE_PS5_THIRD_PARTY_PATH%/zlib/zlib-1.2.5/Lib/libz.a" ^
+ -DgRPC_SSL_PROVIDER=package ^
+ -DOPENSSL_INCLUDE_DIR="%UE_PS5_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/include" ^
+ -DOPENSSL_SSL_LIBRARY="%UE_PS5_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/Lib/Release/libssl.a" ^
+ -DOPENSSL_CRYPTO_LIBRARY="%UE_PS5_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/Lib/Release/libcrypto.a" ^
+ -DgRPC_BUILD_CODEGEN=OFF -DgRPC_BUILD_CSHARP_EXT=OFF ^
+ -DgRPC_BUILD_GRPC_CPP_PLUGIN=OFF -DgRPC_BUILD_GRPC_CSHARP_PLUGIN=OFF ^
+ -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF ^
+ -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF ^
+ -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF ^
+ %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.55
+cmake --build . --target INSTALL --config Debug
+cmake --build . --target INSTALL --config Release
+```
