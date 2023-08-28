@@ -14,7 +14,7 @@ You can compile these libraries according to the method below, or directly downl
 ## 1. Prepare
 * [Visual Studio 2019](https://visualstudio.microsoft.com/)
 * [CMake](https://cmake.org/)
-* [Unreal Engine Source Code](https://github.com/epicgames/unrealengine)(4.27.2)
+* [Unreal Engine Source Code](https://github.com/epicgames/unrealengine)(4.27 above)
 * Unreal Engine [Cross-Compiling toolchain for Linux](https://docs.unrealengine.com/4.27/en-US/SharingAndReleasing/Linux/GettingStarted/)
 * [Ninja](https://ninja-build.org/)
 * [Android Studio](https://developer.android.com/studio/)
@@ -36,6 +36,9 @@ The environment variables required for compilation
 ### Linux(Cross Compiling)
 * `LINUX_MULTIARCH_ROOT` The directory where you installed Unreal Engine [Cross-Compiling toolchain for Linux](https://docs.unrealengine.com/4.27/en-US/SharingAndReleasing/Linux/GettingStarted/).
 * `NINJA_EXE_PATH` The file path of `ninja.exe`, [Ninja](https://ninja-build.org/) is a small build system with a focus on speed.
+
+### PlayStation5
+* `UE_PS5_THIRD_PARTY_PATH` UE PlayStation5 third party source directoy, If you correctly downloaded the UE source code with the PS5 platform, then this directory should be located at `Engine/Platform/PS5/Source/ThirdParty`
 
 ## 3. Compile Step
 After clone this repo, update all submodules, and then follow the steps below to compile these libraries.
