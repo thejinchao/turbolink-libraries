@@ -2,7 +2,7 @@
 Protocol Buffers - Google's data interchange format
 
 ## Version
-4.23.3
+4.23.4
 
 ## Submodule
 https://github.com/protocolbuffers/protobuf/tree/23.x
