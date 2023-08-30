@@ -5,11 +5,11 @@
 	path = Source/protobuf/protobuf-4.23.x
 	url = https://github.com/protocolbuffers/protobuf.git
 	branch = 23.x
-[submodule "Source/abseil/abseil-20230125"]
-	path = Source/abseil/abseil-20230125
-	url = https://github.com/abseil/abseil-cpp.git
-	branch = lts_2023_01_25
 [submodule "Source/grpc/grpc-1.55"]
 	path = Source/grpc/grpc-1.55
 	url = https://github.com/grpc/grpc.git
 	branch = v1.55.x
+[submodule "Source/abseil/abseil-20230802"]
+	path = Source/abseil/abseil-20230802
+	url = https://github.com/abseil/abseil-cpp.git
+	branch = lts_2023_08_02
