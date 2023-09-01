@@ -2,15 +2,15 @@
 gRPC is a modern open source high performance Remote Procedure Call (RPC) framework that can run in any environment. It can efficiently connect services in and across data centers with pluggable support for load balancing, tracing, health checking and authentication. It is also applicable in last mile of distributed computing to connect devices, mobile applications and browsers to backend services.
 
 ## Version
-1.55.1
+1.57.0
 
 ## Submodule
-https://github.com/grpc/grpc/tree/v1.55.1
+https://github.com/grpc/grpc/tree/v1.57.0
 
 ## Patch
 ```
-cd %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.55
-git apply --whitespace=nowarn  ../patch/diff-base-on-1.55.patch
+cd %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.57
+git apply --whitespace=nowarn  ../patch/diff-base-on-1.57.patch
 ```
 
 ## Build
@@ -40,7 +40,7 @@ cmake -G "Visual Studio 16 2019" ^
  -DSSL_EAY_LIBRARY_DEBUG="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Debug/libssl.lib" ^
  -DSSL_EAY_LIBRARY_RELEASE="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Release/libssl.lib" ^
  -DSSL_EAY_RELEASE="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Win64/VS2015/Release/libssl.lib" ^
- %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.55
+ %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.57
 cmake --build . --target INSTALL --config Debug --parallel
 cmake --build . --target INSTALL --config Release --parallel
 ```
@@ -69,7 +69,7 @@ mkdir %a & pushd %a ^
  -DOPENSSL_SSL_LIBRARY="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Android/%b/libssl.a" ^
  -DOPENSSL_CRYPTO_LIBRARY="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1k/lib/Android/%b/libcrypto.a" ^
  -DgRPC_BUILD_CODEGEN=OFF -DgRPC_BUILD_CSHARP_EXT=OFF ^
- %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.55 ^
+ %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.57 ^
  & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" --build . --target install --config Debug ^
  & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" --build . --target install --config Release ^
  & popd
@@ -103,7 +103,7 @@ cmake -G "Ninja Multi-Config" -DCMAKE_MAKE_PROGRAM=%NINJA_EXE_PATH% ^
  -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF ^
  -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF ^
  -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF ^
- %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.55
+ %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.57
 cmake --build . --target install --config Debug
 cmake --build . --target install --config Release
 ```
@@ -133,7 +133,7 @@ cmake -G "Unix Makefiles" \
  -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
  -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
  -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF \
- $TL_LIBRARIES_PATH/Source/grpc/grpc-1.55
+ $TL_LIBRARIES_PATH/Source/grpc/grpc-1.57
 cmake --build . --target install --config Release
 ```
 ### 5. iOS
@@ -163,7 +163,7 @@ cmake -G "Unix Makefiles" \
  -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
  -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
  -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF \
- $TL_LIBRARIES_PATH/Source/grpc/grpc-1.55
+ $TL_LIBRARIES_PATH/Source/grpc/grpc-1.57
 cmake --build . --target install --config Release
 ```
 ### 3. Play Station 5
@@ -192,7 +192,7 @@ mkdir %TL_LIBRARIES_PATH%\_build\ps5\grpc & cd %TL_LIBRARIES_PATH%\_build\ps5\gr
  -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF ^
  -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF ^
  -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF ^
- %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.55
+ %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.57
 cmake --build . --target INSTALL --config Debug
 cmake --build . --target INSTALL --config Release
 ```

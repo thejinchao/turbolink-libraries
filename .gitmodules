@@ -9,7 +9,7 @@
 	path = Source/abseil/abseil-20230125
 	url = https://github.com/abseil/abseil-cpp.git
 	branch = lts_2023_01_25
-[submodule "Source/grpc/grpc-1.55"]
-	path = Source/grpc/grpc-1.55
+[submodule "Source/grpc/grpc-1.57"]
+	path = Source/grpc/grpc-1.57
 	url = https://github.com/grpc/grpc.git
-	branch = v1.55.x
+	branch = v1.57.x
