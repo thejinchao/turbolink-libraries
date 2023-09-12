@@ -3,7 +3,7 @@ Libraries for TurboLink
 [Unreal Engine](https://www.unrealengine.com/) compatibile gRPC libraries, include [abesil](https://github.com/abseil/abseil-cpp), [re2](https://github.com/google/re2), [protobuf](https://github.com/protocolbuffers/protobuf/tree) and [gRPC](https://github.com/grpc). This repo is part of [TurboLink](https://github.com/thejinchao/turbolink), an Unreal Engine gRPC plugin.  
 You can compile these libraries according to the method below, or directly download the [pre-compiled binaries](https://github.com/thejinchao/turbolink-libraries/releases) to avoid manual building. I have compiled and passed the following platforms:
 * Windows(x64)
-* Android(armv7, arm64, x64)
+* Android(arm64, x64)
 * iOS(os64)
 * MacOS
 * Linux(x64)
