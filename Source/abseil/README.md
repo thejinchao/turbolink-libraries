@@ -18,10 +18,10 @@ git apply --whitespace=nowarn ../patch/diff-base-on-2023_01_25.patch
 ### 1. Windows
 ```
 mkdir %TL_LIBRARIES_PATH%\_build\win64\abseil & cd %TL_LIBRARIES_PATH%\_build\win64\abseil
-cmake -G "Visual Studio 16 2019" ^
+cmake -G "Visual Studio 17 2022" ^
  -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/abseil ^
  -DCMAKE_INSTALL_LIBDIR="lib/win64/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
- -DCMAKE_INSTALL_CMAKEDIR=lib/win64/cmake ^
+ -DCMAKE_INSTALL_CMAKEDIR=lib/win64/cmake -DCMAKE_CXX_STANDARD=17 ^
  -DBUILD_TESTING=False -DABSL_PROPAGATE_CXX_STD=True ^
  %TL_LIBRARIES_PATH%/Source/abseil/abseil-20230125
 cmake --build . --target INSTALL --config Debug --parallel
@@ -30,12 +30,12 @@ cmake --build . --target INSTALL --config Release --parallel
 ### 2. Android(armv7, arm64, x64)
 ```
 mkdir %TL_LIBRARIES_PATH%\_build\android\abseil & cd %TL_LIBRARIES_PATH%\_build\android\abseil
-for /d %a in (armeabi-v7a arm64-v8a x86_64) do (
+for /d %a in (arm64-v8a x86_64) do (
 mkdir %a & pushd %a ^
  & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" -G "Ninja Multi-Config" ^
  -DCMAKE_TOOLCHAIN_FILE="%NDKROOT%\build\cmake\android.toolchain.cmake" ^
  -DCMAKE_MAKE_PROGRAM=%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\ninja.exe ^
- -DANDROID_ABI=%a -DANDROID_PLATFORM=21 ^
+ -DANDROID_ABI=%a -DANDROID_PLATFORM=33 -DCMAKE_CXX_STANDARD=17 ^
  -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/abseil ^
  -DCMAKE_INSTALL_LIBDIR="lib/android/%a/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
  -DCMAKE_INSTALL_CMAKEDIR=lib/android/%a/cmake ^
@@ -49,7 +49,7 @@ mkdir %a & pushd %a ^
 ```
 mkdir %TL_LIBRARIES_PATH%\_build\linux\abseil & cd %TL_LIBRARIES_PATH%\_build\linux\abseil
 cmake -G "Ninja Multi-Config" -DCMAKE_MAKE_PROGRAM=%NINJA_EXE_PATH% ^
- -DCMAKE_TOOLCHAIN_FILE="%TL_LIBRARIES_PATH%\BuildTools\linux\ue4-linux-cross-compile.cmake" ^
+ -DCMAKE_TOOLCHAIN_FILE="%TL_LIBRARIES_PATH%\BuildTools\linux\ue5-linux-cross-compile.cmake" ^
  -DUE_THIRD_PARTY_PATH=%UE_THIRD_PARTY_PATH% ^
  -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/abseil ^
  -DCMAKE_INSTALL_LIBDIR="lib/linux/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
@@ -68,7 +68,7 @@ cmake -G "Unix Makefiles" \
  -DCMAKE_TOOLCHAIN_FILE=$TL_LIBRARIES_PATH/BuildTools/Apple/ios.toolchain.cmake \
  -DPLATFORM=MAC_UNIVERSAL -DDEPLOYMENT_TARGET=10.14 \
  -DCMAKE_INSTALL_CMAKEDIR=lib/mac/cmake \
- -DCMAKE_CXX_STANDARD=14 -DBUILD_TESTING=False -DABSL_PROPAGATE_CXX_STD=True \
+ -DCMAKE_CXX_STANDARD=17 -DBUILD_TESTING=False -DABSL_PROPAGATE_CXX_STD=True \
  $TL_LIBRARIES_PATH/Source/abseil/abseil-20230125
 cmake --build . --target install --config Release
 ```
@@ -80,19 +80,20 @@ cmake -G "Unix Makefiles" \
  -DCMAKE_TOOLCHAIN_FILE=$TL_LIBRARIES_PATH/BuildTools/Apple/ios.toolchain.cmake \
  -DCMAKE_INSTALL_LIBDIR=lib/ios -DPLATFORM=OS64 -DDEPLOYMENT_TARGET=12.0 \
  -DCMAKE_INSTALL_CMAKEDIR=lib/ios/cmake \
- -DCMAKE_CXX_STANDARD=14 -DBUILD_TESTING=False -DABSL_PROPAGATE_CXX_STD=True \
+ -DCMAKE_CXX_STANDARD=17 -DBUILD_TESTING=False -DABSL_PROPAGATE_CXX_STD=True \
  $TL_LIBRARIES_PATH/Source/abseil/abseil-20230125
 cmake --build . --target install --config Release
 ```
 ### 6.PlayStation 5
 ```
 mkdir %TL_LIBRARIES_PATH%\_build\ps5\abseil & cd %TL_LIBRARIES_PATH%\_build\ps5\abseil
-"%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5CMake.bat" -G "Visual Studio 16 2019" ^
+cmake -DCMAKE_TOOLCHAIN_FILE="%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5.cmake" ^
+ -G "Ninja Multi-Config" -DCMAKE_MAKE_PROGRAM=%NINJA_EXE_PATH% ^
  -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/abseil ^
  -DCMAKE_INSTALL_LIBDIR="lib/ps5/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
- -DCMAKE_INSTALL_CMAKEDIR=lib/ps5/cmake -DCMAKE_CXX_STANDARD=14 ^
+ -DCMAKE_INSTALL_CMAKEDIR=lib/ps5/cmake -DCMAKE_CXX_STANDARD=17 ^
  -DBUILD_TESTING=False -DABSL_PROPAGATE_CXX_STD=True ^
  %TL_LIBRARIES_PATH%/Source/abseil/abseil-20230125
-cmake --build . --target INSTALL --config Debug
-cmake --build . --target INSTALL --config Release
+cmake --build . --target install --config Debug
+cmake --build . --target install --config Release
 ```

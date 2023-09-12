@@ -632,3 +632,23 @@ index f6983aeb..e7b52d7b 100644
      zone = "/etc/localtime";  // System-specific default.
      localtime_env = std::getenv("LOCALTIME");
  #endif
+diff --git a/absl/types/CMakeLists.txt b/absl/types/CMakeLists.txt
+index 830953ae..3ea96c2b 100644
+--- a/absl/types/CMakeLists.txt
++++ b/absl/types/CMakeLists.txt
+@@ -13,6 +13,7 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ #
++if(NOT(__COMPILER_PS5))
+ absl_cc_library(
+   NAME
+     any
+@@ -102,6 +103,7 @@ absl_cc_test(
+     absl::exception_safety_testing
+     GTest::gmock_main
+ )
++endif()
+ 
+ absl_cc_library(
+   NAME

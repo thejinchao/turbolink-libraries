@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index dc09f63db..1447556b4 100644
+index 909cfe39a..9c728475c 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -166,7 +166,9 @@ else()
@@ -19,7 +19,7 @@ index dc09f63db..1447556b4 100644
  
 +if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 +  # Clang warning suppressions
-+  add_definitions(-Wall -Werror -Wno-deprecated-register -Wno-unused-function)
++  add_definitions(-Wall -Werror -Wno-deprecated-register -Wno-unused-function -Wno-error=register)
 +endif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 +
  include_directories(
@@ -98,10 +98,32 @@ index a13053207..f093440c7 100644
      options_.enable_codegen_trace = kEnableCodegenTrace;
    }
  }
+diff --git a/src/google/protobuf/port.h b/src/google/protobuf/port.h
+index 166105cd9..1c8c8d73b 100644
+--- a/src/google/protobuf/port.h
++++ b/src/google/protobuf/port.h
+@@ -206,7 +206,7 @@ struct is_supported_message_type
+ };
+ 
+ // To prevent sharing cache lines between threads
+-#ifdef __cpp_aligned_new
++#if defined(__cpp_aligned_new) && !defined(__PROSPERO__)
+ enum { kCacheAlignment = 64 };
+ #else
+ enum { kCacheAlignment = alignof(max_align_t) };  // do the best we can
 diff --git a/src/google/protobuf/port_def.inc b/src/google/protobuf/port_def.inc
-index 644bb87e0..07c49c869 100644
+index b181e6aba..a4dfd2b86 100644
 --- a/src/google/protobuf/port_def.inc
 +++ b/src/google/protobuf/port_def.inc
+@@ -340,7 +340,7 @@ static_assert(PROTOBUF_ABSL_MIN(20230125, 3),
+ #if __has_cpp_attribute(clang::musttail) && !defined(__arm__) &&      \
+     !defined(_ARCH_PPC) && !defined(__wasm__) &&                      \
+     !(defined(_MSC_VER) && defined(_M_IX86)) && !defined(__i386__) && \
+-    !(defined(__NDK_MAJOR__) && __NDK_MAJOR <= 24)
++    !(defined(__NDK_MAJOR__) && __NDK_MAJOR__ <= 24)
+ #  ifndef PROTO2_OPENSOURCE
+ // Compilation fails on ARM32: b/195943306
+ // Compilation fails on powerpc64le: b/187985113
 @@ -1000,6 +1000,8 @@ static_assert(PROTOBUF_ABSL_MIN(20230125, 3),
  // effectively but which people turn on anyways.
  #ifdef __clang__
@@ -111,7 +133,7 @@ index 644bb87e0..07c49c869 100644
  // -Wshorten-64-to-32 is a typical pain where we diff pointers.
  //   char* p = strchr(s, '\n');
  //   return p ? p - s : -1;
-@@ -1064,7 +1066,7 @@ static_assert(PROTOBUF_ABSL_MIN(20230125, 3),
+@@ -1072,7 +1074,7 @@ static_assert(PROTOBUF_ABSL_MIN(20230125, 3),
  #pragma warning(disable: 4125)
  #endif
  
