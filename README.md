@@ -12,10 +12,10 @@ You can compile these libraries according to the method below, or directly downl
 # How to build these libraries
 
 ## 1. Prepare
-* [Visual Studio 2019](https://visualstudio.microsoft.com/)
+* [Visual Studio 2022](https://visualstudio.microsoft.com/)
 * [CMake](https://cmake.org/)
-* [Unreal Engine Source Code](https://github.com/epicgames/unrealengine)(4.27 above)
-* Unreal Engine [Cross-Compiling toolchain for Linux](https://docs.unrealengine.com/4.27/en-US/SharingAndReleasing/Linux/GettingStarted/)
+* [Unreal Engine Source Code](https://github.com/epicgames/unrealengine)(5.3 above)
+* Unreal Engine [Cross-Compiling toolchain for Linux](https://docs.unrealengine.com/5.3/en-US/linux-development-requirements-for-unreal-engine/)
 * [Ninja](https://ninja-build.org/)
 * [Android Studio](https://developer.android.com/studio/)
 * XCode(for MacOS and iOS)
@@ -34,7 +34,7 @@ The environment variables required for compilation
 * `NDK_CMAKE_VERSION` The version number of cmake that comes with the Android NDK, like `3.22.1`(Must later than 3.18)
 
 ### Linux(Cross Compiling)
-* `LINUX_MULTIARCH_ROOT` The directory where you installed Unreal Engine [Cross-Compiling toolchain for Linux](https://docs.unrealengine.com/4.27/en-US/SharingAndReleasing/Linux/GettingStarted/).
+* `LINUX_MULTIARCH_ROOT` The directory where you installed Unreal Engine [Cross-Compiling toolchain for Linux](https://docs.unrealengine.com/5.3/en-US/linux-development-requirements-for-unreal-engine/).
 * `NINJA_EXE_PATH` The file path of `ninja.exe`, [Ninja](https://ninja-build.org/) is a small build system with a focus on speed.
 
 ### PlayStation5
