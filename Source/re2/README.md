@@ -34,7 +34,7 @@ mkdir %a & pushd %a ^
  & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" -G "Ninja Multi-Config" ^
  -DCMAKE_TOOLCHAIN_FILE="%NDKROOT%\build\cmake\android.toolchain.cmake" ^
  -DCMAKE_MAKE_PROGRAM=%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\ninja.exe ^
- -DANDROID_ABI=%a -DANDROID_PLATFORM=33 ^
+ -DANDROID_ABI=%a -DANDROID_PLATFORM=android-33 ^
  -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/re2 ^
  -DCMAKE_INSTALL_LIBDIR="lib/android/%a/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
  -DCMAKE_INSTALL_CMAKEDIR=lib/android/%a/cmake -DRE2_BUILD_TESTING=OFF ^
