@@ -35,7 +35,7 @@ mkdir %a & pushd %a ^
  & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" -G "Ninja Multi-Config" ^
  -DCMAKE_TOOLCHAIN_FILE="%NDKROOT%\build\cmake\android.toolchain.cmake" ^
  -DCMAKE_MAKE_PROGRAM=%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\ninja.exe ^
- -DANDROID_ABI=%a -DANDROID_PLATFORM=21 ^
+ -DANDROID_ABI=%a -DANDROID_PLATFORM=android-21 ^
  -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/abseil ^
  -DCMAKE_INSTALL_LIBDIR="lib/android/%a/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
  -DCMAKE_INSTALL_CMAKEDIR=lib/android/%a/cmake ^
@@ -87,12 +87,13 @@ cmake --build . --target install --config Release
 ### 6.PlayStation 5
 ```
 mkdir %TL_LIBRARIES_PATH%\_build\ps5\abseil & cd %TL_LIBRARIES_PATH%\_build\ps5\abseil
-"%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5CMake.bat" -G "Visual Studio 16 2019" ^
+cmake -DCMAKE_TOOLCHAIN_FILE="%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5.cmake" ^
+ -G "Ninja Multi-Config" -DCMAKE_MAKE_PROGRAM=%NINJA_EXE_PATH% ^
  -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/abseil ^
  -DCMAKE_INSTALL_LIBDIR="lib/ps5/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
  -DCMAKE_INSTALL_CMAKEDIR=lib/ps5/cmake -DCMAKE_CXX_STANDARD=14 ^
  -DBUILD_TESTING=False -DABSL_PROPAGATE_CXX_STD=True ^
  %TL_LIBRARIES_PATH%/Source/abseil/abseil-20230125
-cmake --build . --target INSTALL --config Debug
-cmake --build . --target INSTALL --config Release
+cmake --build . --target install --config Debug
+cmake --build . --target install --config Release
 ```

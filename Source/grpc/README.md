@@ -53,13 +53,12 @@ mkdir %a & pushd %a ^
  & "%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\cmake.exe" -G "Ninja Multi-Config" ^
  -DCMAKE_TOOLCHAIN_FILE="%NDKROOT%\build\cmake\android.toolchain.cmake" ^
  -DCMAKE_MAKE_PROGRAM=%ANDROID_HOME%\cmake\%NDK_CMAKE_VERSION%\bin\ninja.exe ^
- -DANDROID_ABI=%a -DANDROID_PLATFORM=21 ^
- -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/grpc ^
+ -DANDROID_ABI=%a -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/grpc ^
  -DgRPC_INSTALL_LIBDIR="lib/android/%a/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
  -DgRPC_INSTALL_CMAKEDIR=lib/android/%a/cmake ^
  -DgRPC_ABSL_PROVIDER=package -Dabsl_DIR="%TL_LIBRARIES_PATH%/output/abseil/lib/android/%a/cmake" ^
  -DgRPC_RE2_PROVIDER=package -Dre2_DIR="%TL_LIBRARIES_PATH%/output/re2/lib/android/%a/cmake" ^
- -DgRPC_PROTOBUF_PROVIDER=package ^
+ -DgRPC_PROTOBUF_PROVIDER=package -DANDROID_PLATFORM=android-21 ^
  -DProtobuf_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/android/%a/cmake" ^
  -Dutf8_range_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/android/%a/cmake" ^
  -DgRPC_USE_CARES=OFF -DgRPC_ZLIB_PROVIDER=package ^
@@ -169,7 +168,8 @@ cmake --build . --target install --config Release
 ### 3. Play Station 5
 ```
 mkdir %TL_LIBRARIES_PATH%\_build\ps5\grpc & cd %TL_LIBRARIES_PATH%\_build\ps5\grpc
-"%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5CMake.bat" -G "Visual Studio 16 2019" ^
+cmake -DCMAKE_TOOLCHAIN_FILE="%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5.cmake" ^
+ -G "Ninja Multi-Config" -DCMAKE_MAKE_PROGRAM=%NINJA_EXE_PATH% ^
  -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/grpc ^
  -DgRPC_INSTALL_LIBDIR="lib/ps5/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
  -DgRPC_INSTALL_CMAKEDIR=lib/ps5/cmake ^
@@ -193,6 +193,6 @@ mkdir %TL_LIBRARIES_PATH%\_build\ps5\grpc & cd %TL_LIBRARIES_PATH%\_build\ps5\gr
  -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF ^
  -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF ^
  %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.57
-cmake --build . --target INSTALL --config Debug
-cmake --build . --target INSTALL --config Release
+cmake --build . --target install --config Debug
+cmake --build . --target install --config Release
 ```
