@@ -20,10 +20,10 @@ git apply --whitespace=nowarn ../patch/diff-base-on-20220601.patch
 mkdir %TL_LIBRARIES_PATH%\_build\win64\re2 & cd %TL_LIBRARIES_PATH%\_build\win64\re2
 cmake -G "Visual Studio 17 2022" ^
  -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/re2 ^
- -DCMAKE_INSTALL_LIBDIR="lib/win64/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DCMAKE_INSTALL_LIBDIR="lib/win64/$<$<CONFIG:RelWithDebInfo>:RelWithDebInfo>$<$<CONFIG:Release>:Release>" ^
  -DCMAKE_INSTALL_CMAKEDIR=lib/win64/cmake ^
  %TL_LIBRARIES_PATH%/Source/re2/re2-20220601
-cmake --build . --target INSTALL --config Debug --parallel
+cmake --build . --target INSTALL --config RelWithDebInfo --parallel
 cmake --build . --target INSTALL --config Release --parallel
 ```
 ### 2. Android(armv7, arm64, x64)

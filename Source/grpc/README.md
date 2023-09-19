@@ -20,7 +20,7 @@ git apply --whitespace=nowarn  ../patch/diff-base-on-1.57.patch
 mkdir %TL_LIBRARIES_PATH%\_build\win64\grpc & cd %TL_LIBRARIES_PATH%\_build\win64\grpc
 cmake -G "Visual Studio 17 2022" ^
  -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/grpc ^
- -DgRPC_INSTALL_LIBDIR="lib/win64/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DgRPC_INSTALL_LIBDIR="lib/win64/$<$<CONFIG:RelWithDebInfo>:RelWithDebInfo>$<$<CONFIG:Release>:Release>" ^
  -DgRPC_INSTALL_CMAKEDIR=lib/win64/cmake -DgRPC_USE_CARES=OFF -DCMAKE_CXX_STANDARD=17 ^
  -DgRPC_ABSL_PROVIDER=package -Dabsl_DIR="%TL_LIBRARIES_PATH%/output/abseil/lib/win64/cmake" ^
  -DgRPC_RE2_PROVIDER=package -Dre2_DIR="%TL_LIBRARIES_PATH%/output/re2/lib/win64/cmake" ^
@@ -41,7 +41,7 @@ cmake -G "Visual Studio 17 2022" ^
  -DSSL_EAY_LIBRARY_RELEASE="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1t/lib/Win64/VS2015/Release/libssl.lib" ^
  -DSSL_EAY_RELEASE="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1t/lib/Win64/VS2015/Release/libssl.lib" ^
  %TL_LIBRARIES_PATH%/Source/grpc/grpc-1.57
-cmake --build . --target INSTALL --config Debug --parallel
+cmake --build . --target INSTALL --config RelWithDebInfo --parallel
 cmake --build . --target INSTALL --config Release --parallel
 ```
 ### 2. Android(armv7, arm64, x64)

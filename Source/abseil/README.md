@@ -20,11 +20,11 @@ git apply --whitespace=nowarn ../patch/diff-base-on-2023_01_25.patch
 mkdir %TL_LIBRARIES_PATH%\_build\win64\abseil & cd %TL_LIBRARIES_PATH%\_build\win64\abseil
 cmake -G "Visual Studio 17 2022" ^
  -DCMAKE_INSTALL_PREFIX=%TL_LIBRARIES_PATH%/output/abseil ^
- -DCMAKE_INSTALL_LIBDIR="lib/win64/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DCMAKE_INSTALL_LIBDIR="lib/win64/$<$<CONFIG:RelWithDebInfo>:RelWithDebInfo>$<$<CONFIG:Release>:Release>" ^
  -DCMAKE_INSTALL_CMAKEDIR=lib/win64/cmake -DCMAKE_CXX_STANDARD=17 ^
  -DBUILD_TESTING=False -DABSL_PROPAGATE_CXX_STD=True ^
  %TL_LIBRARIES_PATH%/Source/abseil/abseil-20230125
-cmake --build . --target INSTALL --config Debug --parallel
+cmake --build . --target INSTALL --config RelWithDebInfo --parallel
 cmake --build . --target INSTALL --config Release --parallel
 ```
 ### 2. Android(armv7, arm64, x64)
