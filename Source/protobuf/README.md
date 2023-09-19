@@ -23,12 +23,12 @@ cmake -G "Visual Studio 16 2019" ^
  -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" ^
  -Dprotobuf_BUILD_TESTS=false -Dprotobuf_WITH_ZLIB=false ^
  -Dprotobuf_DEBUG_POSTFIX="" ^
- -DCMAKE_INSTALL_LIBDIR="lib/win64/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>" ^
+ -DCMAKE_INSTALL_LIBDIR="lib/win64/$<$<CONFIG:RelWithDebInfo>:RelWithDebInfo>$<$<CONFIG:Release>:Release>" ^
  -DCMAKE_INSTALL_CMAKEDIR=lib/win64/cmake ^
  -Dprotobuf_MSVC_STATIC_RUNTIME=false ^
  -Dprotobuf_ABSL_PROVIDER=package -Dabsl_DIR="%TL_LIBRARIES_PATH%/output/abseil/lib/win64/cmake" ^
  %TL_LIBRARIES_PATH%/Source/protobuf/protobuf-4.23.x
-cmake --build . --target INSTALL --config Debug --parallel
+cmake --build . --target INSTALL --config RelWithDebInfo --parallel
 cmake --build . --target INSTALL --config Release --parallel
 ```
 ### 2. Android(armv7, arm64, x64)
