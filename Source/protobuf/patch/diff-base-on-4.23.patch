@@ -1,0 +1,214 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 909cfe39a..9c728475c 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -166,7 +166,9 @@ else()
+ endif()
+ file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmaketest.map)
+ 
+-find_package(Threads REQUIRED)
++if(NOT __COMPILER_PS5)
++  find_package(Threads REQUIRED)
++endif()
+ 
+ # We can install dependencies from submodules if we're running
+ # CMake v3.13 or newer.
+@@ -320,6 +322,11 @@ else (MSVC)
+   set(LIB_PREFIX)
+ endif (MSVC)
+ 
++if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
++  # Clang warning suppressions
++  add_definitions(-Wall -Werror -Wno-deprecated-register -Wno-unused-function -Wno-error=register)
++endif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
++
+ include_directories(
+   ${ZLIB_INCLUDE_DIRECTORIES}
+   ${protobuf_BINARY_DIR}
+diff --git a/cmake/install.cmake b/cmake/install.cmake
+index e7eb2103b..ed8998b11 100644
+--- a/cmake/install.cmake
++++ b/cmake/install.cmake
+@@ -43,6 +43,11 @@ foreach(_library ${_protobuf_libraries})
+     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT ${_library}
+     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT ${_library}
+     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT ${_library})
++  if(WIN32)
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/${_library}.pdb
++       DESTINATION ${CMAKE_INSTALL_LIBDIR}
++       CONFIGURATIONS Debug)
++  endif()
+ endforeach()
+ 
+ if (protobuf_BUILD_PROTOC_BINARIES)
+diff --git a/src/google/protobuf/compiler/importer.cc b/src/google/protobuf/compiler/importer.cc
+index 338ceb078..df329e59c 100644
+--- a/src/google/protobuf/compiler/importer.cc
++++ b/src/google/protobuf/compiler/importer.cc
+@@ -416,9 +416,11 @@ DiskSourceTree::DiskFileToVirtualFile(absl::string_view disk_file,
+   for (int i = 0; i < mapping_index; i++) {
+     if (ApplyMapping(*virtual_file, mappings_[i].virtual_path,
+                      mappings_[i].disk_path, shadowing_disk_file)) {
+-      if (access(shadowing_disk_file->c_str(), F_OK) >= 0) {
+-        // File exists.
+-        return SHADOWED;
++        FILE* fp = fopen(shadowing_disk_file->c_str(), "r");
++        if (fp != nullptr) {
++            // File exists.
++            fclose(fp);
++            return SHADOWED;
+       }
+     }
+   }
+diff --git a/src/google/protobuf/generated_message_util.h b/src/google/protobuf/generated_message_util.h
+index 0493bccef..7f4c8fffc 100644
+--- a/src/google/protobuf/generated_message_util.h
++++ b/src/google/protobuf/generated_message_util.h
+@@ -210,7 +210,7 @@ class PROTOBUF_EXPORT CachedSize {
+   constexpr CachedSize() noexcept : atom_(Scalar{}) {}
+   // NOLINTNEXTLINE(google-explicit-constructor)
+   constexpr CachedSize(Scalar desired) noexcept : atom_(desired) {}
+-#if PROTOBUF_BUILTIN_ATOMIC
++#ifdef PROTOBUF_BUILTIN_ATOMIC
+   constexpr CachedSize(const CachedSize& other) = default;
+ 
+   Scalar Get() const noexcept {
+@@ -237,7 +237,7 @@ class PROTOBUF_EXPORT CachedSize {
+ #endif
+ 
+  private:
+-#if PROTOBUF_BUILTIN_ATOMIC
++#ifdef PROTOBUF_BUILTIN_ATOMIC
+   Scalar atom_;
+ #else
+   std::atomic<Scalar> atom_;
+diff --git a/src/google/protobuf/io/printer.cc b/src/google/protobuf/io/printer.cc
+index a13053207..f093440c7 100644
+--- a/src/google/protobuf/io/printer.cc
++++ b/src/google/protobuf/io/printer.cc
+@@ -279,7 +279,11 @@ Printer::Printer(ZeroCopyOutputStream* output, Options options)
+     // global, so that child processes can pick it up as well. The flag
+     // --enable_codegen_trace setenv()'s this in protoc's startup code.
+     static const bool kEnableCodegenTrace =
++#if defined(__PROSPERO__)
++        false;
++#else
+         ::getenv(kProtocCodegenTrace.data()) != nullptr;
++#endif
+     options_.enable_codegen_trace = kEnableCodegenTrace;
+   }
+ }
+diff --git a/src/google/protobuf/port.h b/src/google/protobuf/port.h
+index 166105cd9..1c8c8d73b 100644
+--- a/src/google/protobuf/port.h
++++ b/src/google/protobuf/port.h
+@@ -206,7 +206,7 @@ struct is_supported_message_type
+ };
+ 
+ // To prevent sharing cache lines between threads
+-#ifdef __cpp_aligned_new
++#if defined(__cpp_aligned_new) && !defined(__PROSPERO__)
+ enum { kCacheAlignment = 64 };
+ #else
+ enum { kCacheAlignment = alignof(max_align_t) };  // do the best we can
+diff --git a/src/google/protobuf/port_def.inc b/src/google/protobuf/port_def.inc
+index b181e6aba..a4dfd2b86 100644
+--- a/src/google/protobuf/port_def.inc
++++ b/src/google/protobuf/port_def.inc
+@@ -340,7 +340,7 @@ static_assert(PROTOBUF_ABSL_MIN(20230125, 3),
+ #if __has_cpp_attribute(clang::musttail) && !defined(__arm__) &&      \
+     !defined(_ARCH_PPC) && !defined(__wasm__) &&                      \
+     !(defined(_MSC_VER) && defined(_M_IX86)) && !defined(__i386__) && \
+-    !(defined(__NDK_MAJOR__) && __NDK_MAJOR <= 24)
++    !(defined(__NDK_MAJOR__) && __NDK_MAJOR__ <= 24)
+ #  ifndef PROTO2_OPENSOURCE
+ // Compilation fails on ARM32: b/195943306
+ // Compilation fails on powerpc64le: b/187985113
+@@ -1000,6 +1000,8 @@ static_assert(PROTOBUF_ABSL_MIN(20230125, 3),
+ // effectively but which people turn on anyways.
+ #ifdef __clang__
+ #pragma clang diagnostic push
++//disabling warnings with newer compilers without breaking builds with older compilers.
++#pragma clang diagnostic ignored "-Wunknown-warning-option"
+ // -Wshorten-64-to-32 is a typical pain where we diff pointers.
+ //   char* p = strchr(s, '\n');
+ //   return p ? p - s : -1;
+@@ -1072,7 +1074,7 @@ static_assert(PROTOBUF_ABSL_MIN(20230125, 3),
+ #pragma warning(disable: 4125)
+ #endif
+ 
+-#if PROTOBUF_ENABLE_DEBUG_LOGGING_MAY_LEAK_PII
++#if defined(PROTOBUF_ENABLE_DEBUG_LOGGING_MAY_LEAK_PII) && PROTOBUF_ENABLE_DEBUG_LOGGING_MAY_LEAK_PII
+ #define PROTOBUF_DEBUG true
+ #else
+ #define PROTOBUF_DEBUG false
+diff --git a/src/google/protobuf/repeated_field.h b/src/google/protobuf/repeated_field.h
+index 057565a41..5a87e6d9c 100644
+--- a/src/google/protobuf/repeated_field.h
++++ b/src/google/protobuf/repeated_field.h
+@@ -101,7 +101,7 @@ constexpr int kRepeatedFieldUpperClampLimit =
+ // Swaps two blocks of memory of size kSize:
+ template <size_t kSize>
+ void memswap(char* a, char* b) {
+-#if __SIZEOF_INT128__
++#ifdef __SIZEOF_INT128__
+   using Buffer = __uint128_t;
+ #else
+   using Buffer = uint64_t;
+diff --git a/src/google/protobuf/stubs/port.h b/src/google/protobuf/stubs/port.h
+index e1c920185..f399fe69c 100644
+--- a/src/google/protobuf/stubs/port.h
++++ b/src/google/protobuf/stubs/port.h
+@@ -62,7 +62,11 @@
+ #if (defined(__APPLE__) || defined(__NEWLIB__))
+ #include <machine/endian.h>  // __BYTE_ORDER
+ #elif defined(__FreeBSD__)
++#if defined(__PROSPERO__)
++#include <machine/endian.h>  // __BYTE_ORDER
++#else
+ #include <sys/endian.h>  // __BYTE_ORDER
++#endif
+ #elif (defined(sun) || defined(__sun)) && (defined(__SVR4) || defined(__svr4__))
+ #include <sys/isa_defs.h>  // __BYTE_ORDER
+ #elif defined(_AIX) || defined(__TOS_AIX__)
+@@ -86,8 +90,13 @@
+ #include <intrin.h>
+ #elif defined(__APPLE__)
+ #include <libkern/OSByteOrder.h>
+-#elif defined(__linux__) || defined(__ANDROID__) || defined(__CYGWIN__)
++#elif defined(__ANDROID__)
+ #include <byteswap.h>  // IWYU pragma: export
++#elif defined(__linux__) || defined(__CYGWIN__)
++#include <bits/byteswap.h>
++#define bswap_16(x) __bswap_16 (x)
++#define bswap_32(x) __bswap_32 (x)
++#define bswap_64(x) __bswap_64 (x)
+ #endif
+ 
+ // Legacy: some users reference these (internal-only) macros even though we
+diff --git a/third_party/utf8_range/CMakeLists.txt b/third_party/utf8_range/CMakeLists.txt
+index 344952d38..c22664af3 100644
+--- a/third_party/utf8_range/CMakeLists.txt
++++ b/third_party/utf8_range/CMakeLists.txt
+@@ -56,7 +56,7 @@ if (utf8_range_ENABLE_INSTALL)
+   include(GNUInstallDirs)
+ 
+   install(EXPORT ${PROJECT_NAME}-targets
+-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
++    DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+     NAMESPACE utf8_range::
+   )
+   install(TARGETS utf8_validity utf8_range EXPORT ${PROJECT_NAME}-targets
+@@ -68,10 +68,10 @@ if (utf8_range_ENABLE_INSTALL)
+   configure_package_config_file(
+     cmake/${PROJECT_NAME}-config.cmake.in
+     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+-    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
++    INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+   )
+   install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
++    DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+   )
+   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/utf8_range.pc.cmake
+                  ${CMAKE_CURRENT_BINARY_DIR}/utf8_range.pc @ONLY)
