@@ -322,6 +322,35 @@ index bb055465e5..6ae48db002 100644
  #elif defined(__FreeBSD__)
  #define GPR_PLATFORM_STRING "freebsd"
  #ifndef _BSD_SOURCE
+diff --git a/src/core/ext/transport/chttp2/transport/decode_huff.h b/src/core/ext/transport/chttp2/transport/decode_huff.h
+index 21f087585c..6aabe32b11 100644
+--- a/src/core/ext/transport/chttp2/transport/decode_huff.h
++++ b/src/core/ext/transport/chttp2/transport/decode_huff.h
+@@ -2737,7 +2737,10 @@ class HuffDecoder : public HuffDecoderCommon {
+   }
+   void Done21() {
+     done_ = true;
+-    switch (end_ - begin_) {}
++    switch (end_ - begin_) {
++      default:
++        break;
++    }
+     switch (buffer_len_) {
+       case 1:
+       case 2:
+diff --git a/src/core/lib/channel/promise_based_filter.h b/src/core/lib/channel/promise_based_filter.h
+index 23181395da..168f0a13c1 100644
+--- a/src/core/lib/channel/promise_based_filter.h
++++ b/src/core/lib/channel/promise_based_filter.h
+@@ -888,7 +888,7 @@ template <typename F, uint8_t kFlags>
+ struct ChannelFilterWithFlagsMethods {
+   static absl::Status InitChannelElem(grpc_channel_element* elem,
+                                       grpc_channel_element_args* args) {
+-    GPR_ASSERT(args->is_last == ((kFlags & kFilterIsLast) != 0));
++    GPR_ASSERT((args->is_last != 0) == ((kFlags & kFilterIsLast) != 0));
+     auto status = F::Create(args->channel_args,
+                             ChannelFilter::Args(args->channel_stack, elem));
+     if (!status.ok()) {
 diff --git a/src/core/lib/event_engine/posix_engine/ev_epoll1_linux.cc b/src/core/lib/event_engine/posix_engine/ev_epoll1_linux.cc
 index 7155ee1609..075529576b 100644
 --- a/src/core/lib/event_engine/posix_engine/ev_epoll1_linux.cc
@@ -1212,6 +1241,23 @@ index a3936608cc..cbc12d70b9 100644
    if (0 != r) {
      gpr_log(GPR_ERROR, "pipe creation failed (%d): %s", errno,
              grpc_core::StrError(errno).c_str());
+diff --git a/src/core/lib/promise/party.h b/src/core/lib/promise/party.h
+index 206cbd5af8..dd5f989d32 100644
+--- a/src/core/lib/promise/party.h
++++ b/src/core/lib/promise/party.h
+@@ -159,10 +159,10 @@ class PartySyncUsingAtomics {
+       size_t n = 0;
+       for (size_t bit = 0; n < count && bit < party_detail::kMaxParticipants;
+            bit++) {
+-        if (allocated & (1 << bit)) continue;
++        if (allocated & (1ull << bit)) continue;
+         wakeup_mask |= (1 << bit);
+         slots[n++] = bit;
+-        allocated |= 1 << bit;
++        allocated |= (1ull << bit);
+       }
+       GPR_ASSERT(n == count);
+       // Try to allocate this slot and take a ref (atomically).
 diff --git a/third_party/address_sorting/address_sorting_internal.h b/third_party/address_sorting/address_sorting_internal.h
 index be59d44fee..2c21c03191 100644
 --- a/third_party/address_sorting/address_sorting_internal.h
