@@ -9,13 +9,19 @@ You can compile these libraries according to the method below, or directly downl
 * Linux(x64)
 * PlayStation5
 
+# Current Version
+* abseil LTS 20230125(patch3)
+* re2 2022-06-01
+* protobuf 4.23.4
+* gRPC 1.57.0
+
 # How to build these libraries
 
 ## 1. Prepare
 * [Visual Studio 2022](https://visualstudio.microsoft.com/)
 * [CMake](https://cmake.org/)
-* [Unreal Engine Source Code](https://github.com/epicgames/unrealengine)(5.3 above)
-* Unreal Engine [Cross-Compiling toolchain for Linux](https://docs.unrealengine.com/5.3/en-US/linux-development-requirements-for-unreal-engine/)
+* [Unreal Engine Source Code](https://github.com/epicgames/unrealengine)(5.4 above)
+* Unreal Engine [Cross-Compiling toolchain for Linux](https://docs.unrealengine.com/5.4/en-US/linux-development-requirements-for-unreal-engine/)
 * [Ninja](https://ninja-build.org/)
 * [Android Studio](https://developer.android.com/studio/)
 * XCode(for MacOS and iOS)

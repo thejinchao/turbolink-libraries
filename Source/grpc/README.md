@@ -27,9 +27,9 @@ cmake -G "Visual Studio 17 2022" ^
  -DgRPC_PROTOBUF_PROVIDER=package -DProtobuf_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/win64/cmake" ^
  -Dutf8_range_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/win64/cmake" ^
  -DgRPC_ZLIB_PROVIDER=package ^
- -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/v1.2.8/include/Win64/VS2015" ^
- -DZLIB_LIBRARY_RELEASE="%UE_THIRD_PARTY_PATH%/zlib/v1.2.8/lib/Win64/VS2015/Release/zlibstatic.lib" ^
- -DZLIB_LIBRARY_DEBUG="%UE_THIRD_PARTY_PATH%/zlib/v1.2.8/lib/Win64/VS2015/Debug/zlibstatic.lib" ^
+ -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/1.3/include" ^
+ -DZLIB_LIBRARY_RELEASE="%UE_THIRD_PARTY_PATH%/zlib/1.3/lib/Win64/Release/zlibstatic.lib" ^
+ -DZLIB_LIBRARY_DEBUG="%UE_THIRD_PARTY_PATH%/zlib/1.3/lib/Win64/Release/zlibstatic.lib" ^
  -DgRPC_SSL_PROVIDER=package ^
  -DOPENSSL_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1t/include/Win64/VS2015" ^
  -DLIB_EAY_LIBRARY_DEBUG="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1t/lib/Win64/VS2015/Debug/libcrypto.lib" ^
@@ -63,7 +63,7 @@ mkdir %a & pushd %a ^
  -DProtobuf_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/android/%a/cmake" ^
  -Dutf8_range_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/android/%a/cmake" ^
  -DgRPC_USE_CARES=OFF -DgRPC_ZLIB_PROVIDER=package ^
- -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/1.2.13/include" ^
+ -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/1.3/include" ^
  -DgRPC_SSL_PROVIDER=package ^
  -DOPENSSL_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1t/include/Android" ^
  -DOPENSSL_SSL_LIBRARY="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1t/lib/Android/%b/libssl.a" ^
@@ -91,9 +91,9 @@ cmake -G "Ninja Multi-Config" -DCMAKE_MAKE_PROGRAM=%NINJA_EXE_PATH% ^
  -DProtobuf_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/linux/cmake" ^
  -Dutf8_range_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/linux/cmake" ^
  -DgRPC_ZLIB_PROVIDER=package ^
- -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/v1.2.8/include/Unix/x86_64-unknown-linux-gnu" ^
- -DZLIB_LIBRARY_RELEASE="%UE_THIRD_PARTY_PATH%/zlib/v1.2.8/lib/Unix/x86_64-unknown-linux-gnu/libz.a" ^
- -DZLIB_LIBRARY_DEBUG="%UE_THIRD_PARTY_PATH%/zlib/v1.2.8/lib/Unix/x86_64-unknown-linux-gnu/libz.a" ^
+ -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/1.3/include" ^
+ -DZLIB_LIBRARY_RELEASE="%UE_THIRD_PARTY_PATH%/zlib/1.3/lib/Unix/x86_64-unknown-linux-gnu/Release/libz.a" ^
+ -DZLIB_LIBRARY_DEBUG="%UE_THIRD_PARTY_PATH%/zlib/1.3/lib/Unix/x86_64-unknown-linux-gnu/Release/libz.a" ^
  -DgRPC_SSL_PROVIDER=package ^
  -DOPENSSL_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1t/include/Unix" ^
  -DOPENSSL_SSL_LIBRARY="%UE_THIRD_PARTY_PATH%/OpenSSL/1.1.1t/lib/Unix/x86_64-unknown-linux-gnu/libssl.a" ^
@@ -179,9 +179,9 @@ cmake -DCMAKE_TOOLCHAIN_FILE="%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5.cmake" ^
  -DProtobuf_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/ps5/cmake" ^
  -Dutf8_range_DIR="%TL_LIBRARIES_PATH%/output/protobuf/lib/ps5/cmake" ^
  -DgRPC_ZLIB_PROVIDER=package ^
- -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/1.2.13/include" ^
- -DZLIB_LIBRARY_RELEASE="%UE_PS5_THIRD_PARTY_PATH%/zlib/1.2.13/lib/Release/libzlibstatic.a" ^
- -DZLIB_LIBRARY_DEBUG="%UE_PS5_THIRD_PARTY_PATH%/zlib/1.2.13/lib/Release/libzlibstatic.a" ^
+ -DZLIB_INCLUDE_DIR="%UE_THIRD_PARTY_PATH%/zlib/1.3/include" ^
+ -DZLIB_LIBRARY_RELEASE="%UE_PS5_THIRD_PARTY_PATH%/zlib/1.3/lib/Release/libzlibstatic.a" ^
+ -DZLIB_LIBRARY_DEBUG="%UE_PS5_THIRD_PARTY_PATH%/zlib/1.3/lib/Release/libzlibstatic.a" ^
  -DgRPC_SSL_PROVIDER=package ^
  -DOPENSSL_INCLUDE_DIR="%UE_PS5_THIRD_PARTY_PATH%/OpenSSL/1.1.1t/Include" ^
  -DOPENSSL_SSL_LIBRARY="%UE_PS5_THIRD_PARTY_PATH%/OpenSSL/1.1.1t/Lib/Release/libssl.a" ^
