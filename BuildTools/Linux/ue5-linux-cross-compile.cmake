@@ -53,7 +53,7 @@ set(CMAKE_OBJDUMP 		${CLANG_TOOLCHAIN_BIN}/x86_64-unknown-linux-gnu-objdump.exe	
 # =============================================================================
 # Define flags 
 # =============================================================================
-set(COMPILER_FLAGS 		 " -nostdinc++ --target=${LINUX_ARCH_NAME} --sysroot='${CLANG_TOOLCHAIN_ROOT}' -fno-math-errno -fno-rtti -fno-exceptions -fdiagnostics-format=msvc -funwind-tables -gdwarf-3")
+set(COMPILER_FLAGS 		 " -nostdinc++ --target=${LINUX_ARCH_NAME} --sysroot='${CLANG_TOOLCHAIN_ROOT}' -fno-math-errno -fno-rtti -fno-exceptions -fdiagnostics-format=msvc -funwind-tables -gdwarf-3 -fPIC")
 set(FLAGS_DEBUG 		 " -O0 -g -D_DEBUG")
 set(FLAGS_MINSIZEREL 	 " -Os -DNDEBUG")
 set(FLAGS_RELEASE 		 " -O3 -DNDEBUG")
