@@ -109,7 +109,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="%SCE_ROOT_DIR%\Prospero\Tools\CMake\PS5.cmake" ^
  -DCMAKE_INSTALL_CMAKEDIR=lib/ps5/cmake -DCMAKE_CXX_STANDARD=17 ^
  -Dprotobuf_ABSL_PROVIDER=package -Dabsl_DIR="%TL_LIBRARIES_PATH%/output/abseil/lib/ps5/cmake" ^
  -Dprotobuf_BUILD_TESTS=false -Dprotobuf_WITH_ZLIB=false ^
- -Dprotobuf_BUILD_EXAMPLES=false ^
+ -Dprotobuf_BUILD_EXAMPLES=false -Dprotobuf_DEBUG_POSTFIX="" ^
  -Dprotobuf_BUILD_PROTOC_BINARIES=false -Dprotobuf_BUILD_LIBPROTOC=false ^
  -Dprotobuf_DISABLE_RTTI=true ^
  %TL_LIBRARIES_PATH%/Source/protobuf/protobuf-4.23.x
