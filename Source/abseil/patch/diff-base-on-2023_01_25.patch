@@ -460,6 +460,33 @@ index bdb10f2a..47611868 100644
  }
  
  LogMessage& LogMessage::operator<<(const std::string& v) {
+diff --git a/absl/meta/type_traits.h b/absl/meta/type_traits.h
+index b1656c39..7e687736 100644
+--- a/absl/meta/type_traits.h
++++ b/absl/meta/type_traits.h
+@@ -668,7 +668,8 @@ using underlying_type_t = typename std::underlying_type<T>::type;
+ namespace type_traits_internal {
+ 
+ #if (defined(__cpp_lib_is_invocable) && __cpp_lib_is_invocable >= 201703L) || \
+-    (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
++    (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || \
++    (defined(__PROSPERO__) && __cplusplus >= 201703L)
+ // std::result_of is deprecated (C++17) or removed (C++20)
+ template<typename> struct result_of;
+ template<typename F, typename... Args>
+diff --git a/absl/strings/internal/str_split_internal.h b/absl/strings/internal/str_split_internal.h
+index 35edf3aa..6c1d6c5b 100644
+--- a/absl/strings/internal/str_split_internal.h
++++ b/absl/strings/internal/str_split_internal.h
+@@ -352,7 +352,7 @@ class Splitter {
+           ar[index].size = it->size();
+           ++it;
+         } while (++index != ar.size() && !it.at_end());
+-        v.insert(v.end(), ar.begin(), ar.begin() + index);
++        v.insert(v.end(), ar.begin(), ar.begin() + static_cast<typename std::array<raw_view, 16>::difference_type>(index));
+       }
+       return v;
+     }
 diff --git a/absl/time/internal/cctz/include/cctz/civil_time_detail.h b/absl/time/internal/cctz/include/cctz/civil_time_detail.h
 index a5b084e6..f7d11532 100644
 --- a/absl/time/internal/cctz/include/cctz/civil_time_detail.h
